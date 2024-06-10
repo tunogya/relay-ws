@@ -1,0 +1,36 @@
+service: tripiz-nostr-relay
+frameworkVersion: "3"
+useDotenv: true
+
+package:
+  patterns:
+    - "src/**"
+  individually: true
+  excludeDevDependencies: true
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  deploymentMethod: "direct"
+  region: "ap-northeast-1"
+  iam:
+    role:
+      managedPolicies:
+        - "arn:aws:iam::aws:policy/AmazonSNSFullAccess"
+
+plugins:
+  - "serverless-plugin-typescript"
+  - "serverless-dotenv-plugin"
+
+functions:
+  handler:
+    name: "nostr-persistence"
+    handler: "src/persistence.handler"
+    timeout: 6
+    memorySize: 256
+    architecture: arm64
+    reservedConcurrency: 5
+    maximumRetryAttempts: 1
+    events:
+      - sns:
+          arn: ${env:SNS_ARN}
