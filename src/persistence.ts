@@ -1,4 +1,4 @@
-import { Handler, SNSEvent } from "aws-lambda";
+import { Handler, SNSEvent, SNSEventRecord } from "aws-lambda";
 import { connectToDatabase } from "./utils/astradb";
 import { convertTagsToDict } from "./utils/convertTagsToDict";
 
@@ -12,53 +12,48 @@ export const handler: Handler = async (event: SNSEvent, context) => {
 
   const { db } = await connectToDatabase();
 
-  for (const record of records) {
+  const processRecord = async (record: SNSEventRecord) => {
     try {
       const message = JSON.parse(record.Sns.Message);
       // parse tags to tags_map, for db query
       const tags_map = convertTagsToDict(message.tags);
+
+      let filter, update;
       if (message.kind === 0) {
-        // need to replace with same pubkey
-        await db.collection("events").updateOne(
-          {
-            kind: 0, // must be 0
-            pubkey: message.pubkey, // must be same pubkey
+        filter = { kind: 0, pubkey: message.pubkey };
+        update = {
+          $set: {
+            id: message.id,
+            content: message.content,
+            tags: message.tags,
+            sig: message.sig,
+            created_at: message.created_at,
+            tags_map,
           },
-          {
-            $set: {
-              id: message.id, // can be different
-              content: message.content, // can be different
-              tags: message.tags, // can be different
-              sig: message.sig, // can be different
-              created_at: message.created_at, // can be different
-              tags_map, // for db query
-            },
-          },
-        );
+        };
       } else if (message.kind === 1) {
-        // message's id can inserted first
-        // so need to replace with same id
-        await db.collection("events").updateOne(
-          {
-            kind: 1, // must be 1
-            id: message.id, // must be same id
+        filter = { kind: 1, id: message.id };
+        update = {
+          $set: {
+            pubkey: message.pubkey,
+            content: message.content,
+            tags: message.tags,
+            sig: message.sig,
+            created_at: message.created_at,
+            tags_map,
           },
-          {
-            $set: {
-              pubkey: message.pubkey, // maybe inserted first, but not inserted
-              content: message.content, // inserted
-              tags: message.tags, // inserted
-              sig: message.sig, // inserted
-              created_at: message.created_at, // inserted
-              tags_map, // for db query
-            },
-          },
-        );
+        };
+      }
+
+      if (filter && update) {
+        await db.collection("events").updateOne(filter, update);
       }
     } catch (e) {
       console.log(e);
     }
-  }
+  };
+
+  await Promise.all(records.map(processRecord));
 
   console.log(`Successfully processed ${records.length} records.`);
   return {
