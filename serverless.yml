@@ -23,7 +23,7 @@ plugins:
   - "serverless-dotenv-plugin"
 
 functions:
-  handler:
+  persistence:
     name: "nostr-persistence"
     handler: "src/persistence.handler"
     timeout: 6
@@ -33,4 +33,26 @@ functions:
     maximumRetryAttempts: 1
     events:
       - sns:
-          arn: ${env:SNS_ARN}
+          arn: ${env:NOSTR_EVENTS_SNS_ARN}
+  moderation:
+    name: "nostr-moderation"
+    handler: "src/moderation.handler"
+    timeout: 6
+    memorySize: 256
+    architecture: arm64
+    reservedConcurrency: 5
+    maximumRetryAttempts: 1
+    events:
+      - sns:
+          arn: ${env:NOSTR_EVENTS_SNS_ARN}
+  embeddings:
+    name: "nostr-embeddings"
+    handler: "src/embeddings.handler"
+    timeout: 6
+    memorySize: 256
+    architecture: arm64
+    reservedConcurrency: 5
+    maximumRetryAttempts: 1
+    events:
+      - sns:
+          arn: ${env:NOSTR_EVENTS_SNS_ARN}
