@@ -19,7 +19,7 @@ export const handler: Handler = async (event: SNSEvent, context) => {
       const tags_map = convertTagsToDict(message.tags);
       if (message.kind === 0) {
         // need to replace with same pubkey
-        return await db.collection("events").updateOne(
+        await db.collection("events").updateOne(
           {
             kind: 0, // must be 0
             pubkey: message.pubkey, // must be same pubkey
@@ -38,7 +38,7 @@ export const handler: Handler = async (event: SNSEvent, context) => {
       } else if (message.kind === 1) {
         // message's id can inserted first
         // so need to replace with same id
-        return await db.collection("events").updateOne(
+        await db.collection("events").updateOne(
           {
             kind: 1, // must be 1
             id: message.id, // must be same id
