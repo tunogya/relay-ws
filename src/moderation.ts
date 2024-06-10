@@ -34,8 +34,8 @@ export const handler: Handler = async (event: SNSEvent, context) => {
           { $set: { possibly_sensitive } },
           { upsert: true },
         );
-    } catch (e) {
-      console.log(e);
+    } catch (_) {
+      throw new Error("Intentional failure to trigger DLQ");
     }
   };
 

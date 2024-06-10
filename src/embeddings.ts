@@ -31,8 +31,8 @@ export const handler: Handler = async (event: SNSEvent, context) => {
       await db
         .collection("events")
         .updateOne({ id: message.id }, { $set: { $vector } }, { upsert: true });
-    } catch (e) {
-      console.log(e);
+    } catch (_) {
+      throw new Error("Intentional failure to trigger DLQ");
     }
   };
 

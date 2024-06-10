@@ -57,8 +57,8 @@ export const handler: Handler = async (event: SNSEvent, context) => {
           .collection("events")
           .updateOne(filter, update, { upsert: true });
       }
-    } catch (e) {
-      console.log(e);
+    } catch (_) {
+      throw new Error("Intentional failure to trigger DLQ");
     }
   };
 
