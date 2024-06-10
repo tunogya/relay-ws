@@ -46,7 +46,9 @@ export const handler: Handler = async (event: SNSEvent, context) => {
       }
 
       if (filter && update) {
-        await db.collection("events").updateOne(filter, update);
+        await db
+          .collection("events")
+          .updateOne(filter, update, { upsert: true });
       }
     } catch (e) {
       console.log(e);
