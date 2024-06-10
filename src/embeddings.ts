@@ -13,6 +13,12 @@ export const handler: Handler = async (event: SNSEvent, context) => {
   const processRecord = async (record: SNSEventRecord) => {
     try {
       const message = JSON.parse(record.Sns.Message);
+      const { verifyEvent } = require("nostr-tools/pure");
+      const isValid = verifyEvent(event);
+
+      if (!isValid) {
+        return;
+      }
       if (!message.content) {
         return;
       }

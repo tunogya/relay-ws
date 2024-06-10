@@ -14,32 +14,39 @@ export const handler: Handler = async (event: SNSEvent, context) => {
 
   const processRecord = async (record: SNSEventRecord) => {
     try {
-      const message = JSON.parse(record.Sns.Message);
+      const event = JSON.parse(record.Sns.Message);
+      const { verifyEvent } = require("nostr-tools/pure");
+      const isValid = verifyEvent(event);
+
+      if (!isValid) {
+        return;
+      }
+
       // parse tags to tags_map, for db query
-      const tags_map = convertTagsToDict(message.tags);
+      const tags_map = convertTagsToDict(event.tags);
 
       let filter, update;
-      if (message.kind === 0) {
-        filter = { kind: 0, pubkey: message.pubkey };
+      if (event.kind === 0) {
+        filter = { kind: 0, pubkey: event.pubkey };
         update = {
           $set: {
-            id: message.id,
-            content: message.content,
-            tags: message.tags,
-            sig: message.sig,
-            created_at: message.created_at,
+            id: event.id,
+            content: event.content,
+            tags: event.tags,
+            sig: event.sig,
+            created_at: event.created_at,
             tags_map,
           },
         };
-      } else if (message.kind === 1) {
-        filter = { kind: 1, id: message.id };
+      } else if (event.kind === 1) {
+        filter = { kind: 1, id: event.id };
         update = {
           $set: {
-            pubkey: message.pubkey,
-            content: message.content,
-            tags: message.tags,
-            sig: message.sig,
-            created_at: message.created_at,
+            pubkey: event.pubkey,
+            content: event.content,
+            tags: event.tags,
+            sig: event.sig,
+            created_at: event.created_at,
             tags_map,
           },
         };
