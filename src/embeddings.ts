@@ -1,15 +1,36 @@
-import { Handler, SNSEvent } from "aws-lambda";
+import { Handler, SNSEvent, SNSEventRecord } from "aws-lambda";
+import { connectToDatabase } from "./utils/astradb";
+import openai from "./utils/openai";
 
 /**
  * embeddings
- * check nostr events and save to db
- * need to parse tags_map for db query
  */
 export const handler: Handler = async (event: SNSEvent, context) => {
   const records = event.Records;
-  for (const record of records) {
-    console.log(record);
-  }
+
+  const { db } = await connectToDatabase();
+
+  const processRecord = async (record: SNSEventRecord) => {
+    try {
+      const message = JSON.parse(record.Sns.Message);
+      if (!message.content) {
+        return;
+      }
+      const response = await openai.embeddings.create({
+        input: message.content,
+        model: "text-embedding-3-small",
+      });
+      const $vector = response.data[0].embedding;
+
+      await db
+        .collection("events")
+        .updateOne({ id: message.id }, { $set: { $vector } }, { upsert: true });
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
+  await Promise.all(records.map(processRecord));
 
   console.log(`Successfully processed ${records.length} records.`);
   return {
