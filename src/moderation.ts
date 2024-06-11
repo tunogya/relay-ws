@@ -20,9 +20,15 @@ export const handler: Handler = async (event: SNSEvent, context) => {
       if (!isValid) {
         return;
       }
+
+      if (event.kind !== 1) {
+        return;
+      }
+
       if (!event.content) {
         return;
       }
+
       const moderation = await openai.moderations.create({
         input: event.content,
       });

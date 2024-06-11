@@ -7,7 +7,7 @@ import { convertTagsToDict } from "./utils/convertTagsToDict";
 /**
  * call_CarlJung
  * Carl Jung, ready to talk with your dreams
- * only listen kind = 1
+ * only listen kind = 1, and category = dreams
  */
 export const handler: Handler = async (event: SNSEvent, context) => {
   const records = event.Records;
@@ -27,6 +27,14 @@ export const handler: Handler = async (event: SNSEvent, context) => {
       }
 
       if (event.kind !== 1) {
+        return;
+      }
+
+      const tags_map = convertTagsToDict(event.tags);
+      // @ts-ignore
+      const category = tags_map?.category?.[0] || undefined;
+
+      if (category !== "dreams") {
         return;
       }
 

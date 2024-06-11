@@ -13,25 +13,32 @@ export const handler: Handler = async (event: SNSEvent, context) => {
 
   const processRecord = async (record: SNSEventRecord) => {
     try {
-      const message = JSON.parse(record.Sns.Message);
+      const event = JSON.parse(record.Sns.Message);
       const { verifyEvent } = require("nostr-tools/pure");
       const isValid = verifyEvent(event);
 
       if (!isValid) {
         return;
       }
-      if (!message.content) {
+
+      if (event.kind !== 1) {
         return;
       }
+
+      if (!event.content) {
+        return;
+      }
+
       const response = await openai.embeddings.create({
-        input: message.content,
+        input: event.content,
         model: "text-embedding-3-small",
       });
+
       const $vector = response.data[0].embedding;
 
       await db
         .collection("events")
-        .updateOne({ id: message.id }, { $set: { $vector } }, { upsert: true });
+        .updateOne({ id: event.id }, { $set: { $vector } }, { upsert: true });
     } catch (_) {
       throw new Error("Intentional failure to trigger DLQ");
     }
