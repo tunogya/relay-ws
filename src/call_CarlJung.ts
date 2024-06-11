@@ -30,9 +30,9 @@ export const handler: Handler = async (event: SNSEvent, context) => {
         return;
       }
 
-      // @ts-ignore
       const category =
-        tags.find((tag: any[]) => tag[0] === "category")?.[1] || undefined;
+        event.tags.find((tag: any[]) => tag[0] === "category")?.[1] ||
+        undefined;
       if (category !== "dreams") {
         return;
       }
@@ -58,7 +58,7 @@ If suitable texts are found, use the user's language to respond and return a JSO
 
 Example:
 \`\`\`json
-{"name": "Carl Jung", "text": "The dream show..."}`;
+{"name": "Carl Jung", "text": "..."}`;
 
       const request = await openai.chat.completions.create({
         messages: [
