@@ -43,6 +43,10 @@ functions:
     events:
       - sns:
           arn: ${env:NOSTR_EVENTS_SNS_ARN}
+          filterPolicyScope: MessageAttributes
+          filterPolicy:
+            kind:
+              - 1
   embeddings:
     name: "nostr-embeddings"
     handler: "src/embeddings.handler"
@@ -53,6 +57,10 @@ functions:
     events:
       - sns:
           arn: ${env:NOSTR_EVENTS_SNS_ARN}
+          filterPolicyScope: MessageAttributes
+          filterPolicy:
+            kind:
+              - 1
   call_CarlJung:
     name: "nostr-call_CarlJung"
     handler: "src/call_CarlJung.handler"
@@ -63,6 +71,12 @@ functions:
     events:
       - sns:
           arn: ${env:NOSTR_EVENTS_SNS_ARN}
+          filterPolicyScope: MessageAttributes
+          filterPolicy:
+            kind:
+              - 1
+            category:
+              - dreams
   resonance:
     name: "nostr-resonance"
     handler: "src/resonance.handler"
@@ -73,3 +87,7 @@ functions:
     events:
       - sns:
           arn: ${env:NOSTR_EVENTS_SNS_ARN}
+          filterPolicyScope: MessageAttributes
+          filterPolicy:
+            kind:
+              - 1
