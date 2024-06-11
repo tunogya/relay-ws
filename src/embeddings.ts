@@ -4,6 +4,7 @@ import openai from "./utils/openai";
 
 /**
  * embeddings
+ * only listen kind = 1
  */
 export const handler: Handler = async (event: SNSEvent, context) => {
   const records = event.Records;

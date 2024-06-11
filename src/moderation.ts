@@ -3,7 +3,8 @@ import { connectToDatabase } from "./utils/astradb";
 import openai from "./utils/openai";
 
 /**
- * embeddings
+ * moderation
+ * only listen kind = 1
  */
 export const handler: Handler = async (event: SNSEvent, context) => {
   const records = event.Records;

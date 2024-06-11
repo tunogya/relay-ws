@@ -6,6 +6,7 @@ import { convertTagsToDict } from "./utils/convertTagsToDict";
  * persistence
  * check nostr events and save to db
  * need to parse tags_map for db query
+ * listen all kind
  */
 export const handler: Handler = async (event: SNSEvent, context) => {
   const records = event.Records;
