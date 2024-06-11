@@ -51,14 +51,15 @@ Ending State: How the dream ends and the feelings at the end.
 Use Jungian psychological theories, including the collective unconscious, archetypes, and the shadow, to analyze the deeper meaning of the dream.
 
 #### Return Format:
-If suitable texts are found, use the user's language to respond and return a JSON array with each element containing:
+If suitable texts are found, return a JSON array with each element containing:
 
 - \`"name"\`: The author or character of the text.
-- \`"text"\`: The text that resonates with the user's reflection.
+- \`"text"\`: The text that resonates with the user's reflection. Use the user's asked language to respond text.
 
 Example:
 \`\`\`json
-{"name": "Carl Jung", "text": "..."}`;
+{"name": "Carl Jung", "text": "..."}
+\`\`\``;
 
       const request = await openai.chat.completions.create({
         messages: [
