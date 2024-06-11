@@ -29,7 +29,6 @@ functions:
     timeout: 6
     memorySize: 256
     architecture: arm64
-    reservedConcurrency: 5
     maximumRetryAttempts: 1
     events:
       - sns:
@@ -40,7 +39,6 @@ functions:
     timeout: 6
     memorySize: 256
     architecture: arm64
-    reservedConcurrency: 5
     maximumRetryAttempts: 1
     events:
       - sns:
@@ -51,7 +49,26 @@ functions:
     timeout: 6
     memorySize: 256
     architecture: arm64
-    reservedConcurrency: 5
+    maximumRetryAttempts: 1
+    events:
+      - sns:
+          arn: ${env:NOSTR_EVENTS_SNS_ARN}
+  call_CarlJung:
+    name: "nostr-call_CarlJung"
+    handler: "src/call_CarlJung.handler"
+    timeout: 30
+    memorySize: 256
+    architecture: arm64
+    maximumRetryAttempts: 1
+    events:
+      - sns:
+          arn: ${env:NOSTR_EVENTS_SNS_ARN}
+  resonance:
+    name: "nostr-resonance"
+    handler: "src/resonance.handler"
+    timeout: 30
+    memorySize: 256
+    architecture: arm64
     maximumRetryAttempts: 1
     events:
       - sns:
