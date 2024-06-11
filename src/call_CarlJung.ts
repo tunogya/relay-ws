@@ -30,10 +30,9 @@ export const handler: Handler = async (event: SNSEvent, context) => {
         return;
       }
 
-      const tags_map = convertTagsToDict(event.tags);
       // @ts-ignore
-      const category = tags_map?.category?.[0] || undefined;
-
+      const category =
+        tags.find((tag: any[]) => tag[0] === "category")?.[1] || undefined;
       if (category !== "dreams") {
         return;
       }
