@@ -31,8 +31,6 @@
     "husky": "^8.0.3",
     "lint-staged": "^14.0.1",
     "prettier": "3.0.3",
-    "serverless-dotenv-plugin": "^6.0.0",
-    "serverless-plugin-typescript": "^2.1.5",
     "typescript": "^5.4.5"
   }
 }

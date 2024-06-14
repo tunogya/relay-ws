@@ -1,4 +1,5 @@
 node_modules
 .serverless
-/.env.prod
+/prod.env
 /.build
+.env
