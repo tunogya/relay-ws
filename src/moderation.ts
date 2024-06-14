@@ -29,6 +29,13 @@ export const handler: Handler = async (event: SNSEvent, context) => {
         return;
       }
 
+      // must be origin post
+      const e1 =
+        event.tags.find((tag: any[]) => tag[0] === "e")?.[1] || undefined;
+      if (e1) {
+        return;
+      }
+
       const moderation = await openai.moderations.create({
         input: event.content,
       });

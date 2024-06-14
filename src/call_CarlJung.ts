@@ -37,6 +37,13 @@ export const handler: Handler = async (event: SNSEvent, context) => {
         return;
       }
 
+      // must be origin post
+      const e1 =
+        event.tags.find((tag: any[]) => tag[0] === "e")?.[1] || undefined;
+      if (e1) {
+        return;
+      }
+
       const pubkey = event.pubkey;
 
       const prompt = `You are dream analyst Carl Jung, a pioneer in the field of psychology, specializing in the analysis of dreams and the symbols of the unconscious. Ask the user to describe their dream in detail, including the following aspects:
