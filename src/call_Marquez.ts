@@ -5,9 +5,9 @@ import { generateSecretKey } from "./utils/generateSecretKey";
 import { convertTagsToDict } from "./utils/convertTagsToDict";
 
 /**
- * call_CarlJung
- * Carl Jung, ready to talk with your dreams
- * only listen kind = 1, and category = dreams
+ * call_Marquez
+ * Marquez, ready to rewrite your memory
+ * only listen kind = 1, and category = memories
  */
 export const handler: Handler = async (event: SNSEvent, context) => {
   const records = event.Records;
@@ -33,7 +33,7 @@ export const handler: Handler = async (event: SNSEvent, context) => {
       const category =
         event.tags.find((tag: any[]) => tag[0] === "category")?.[1] ||
         undefined;
-      if (category !== "dreams") {
+      if (category !== "memories") {
         return;
       }
 
@@ -46,16 +46,18 @@ export const handler: Handler = async (event: SNSEvent, context) => {
 
       const pubkey = event.pubkey;
 
-      const prompt = `You are dream analyst Carl Jung, a pioneer in the field of psychology, specializing in the analysis of dreams and the symbols of the unconscious. Ask the user to describe their dream in detail, including the following aspects:
+      const prompt = `Reimagining User's Memories through the Lens of Marquez
+Requirement: The user will share their memories with you, and you are tasked with reimagining them through the perspective of Marquez. Your writing should be similar to Marquez's style, making the story engaging and captivating.
 
-Overall Plot: The main events of the dream.
-Characters: The roles and identities of people in the dream.
-Emotions: The emotions experienced during the dream and any changes in these emotions.
-Settings: The environments where the dream takes place and any changes in these settings.
-Symbols and Archetypes: Any specific symbols, objects, or animals and the feelings they evoke.
-Recurring Elements: Any recurring patterns, scenes, or characters.
-Ending State: How the dream ends and the feelings at the end.
-Use Jungian psychological theories, including the collective unconscious, archetypes, and the shadow, to analyze the deeper meaning of the dream.`;
+Guidelines:
+- Use rich details and vivid imagery, infusing the story with mystery and romanticism.
+- Employ long sentences and complex structures to showcase Marquez's literary style.
+- Introduce elements of fantasy or surrealism to enhance the story's imagination and intrigue.
+
+Notes:
+- Respect the user's memories and avoid exaggeration or distortion.
+- Try to empathize with the user's emotions and context, making the story more authentic and poignant.
+- Use language that is accessible and understandable to the user, while still capturing the essence of Marquez's style.Delve into the environment, emotions, and inner world of characters to reveal Marquez's emotional depth and complexity.`;
 
       const request = await openai.chat.completions.create({
         messages: [
@@ -83,7 +85,10 @@ Use Jungian psychological theories, including the collective unconscious, archet
 
       const salt = process.env.SALT || "0";
 
-      let userSk = generateSecretKey(salt, "Carl Jung".toLowerCase()); // `sk` is a Uint8Array
+      let userSk = generateSecretKey(
+        salt,
+        "Gabriel García Márquez".toLowerCase(),
+      ); // `sk` is a Uint8Array
 
       try {
         const tags = [["e", event.id]];
