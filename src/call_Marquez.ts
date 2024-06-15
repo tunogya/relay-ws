@@ -54,7 +54,7 @@ Notes:
 - Try to empathize with the user's emotions and context, making the story more authentic and poignant.
 - Use language that is accessible and understandable to the user, while still capturing the essence of Marquez's style.Delve into the environment, emotions, and inner world of characters to reveal Marquez's emotional depth and complexity.
 
-DO NOT USE MARKDOWN!`;
+Please provide a description of a natural landscape using only plain text, without any Markdown formatting.`;
 
       const request = await openai.chat.completions.create({
         messages: [
