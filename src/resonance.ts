@@ -127,35 +127,33 @@ If no suitable texts are found, return an empty array.`;
             userSk,
           );
           try {
-            await db.collection("events").updateOne(
-              {
-                kind: 0,
-                pubkey: userPubkey,
-              },
-              {
-                $set: {
-                  id: kind0_event.id,
-                  kind: kind0_event.kind,
-                  content: kind0_event.content,
-                  tags: kind0_event.tags,
-                  sig: kind0_event.sig,
-                  created_at: kind0_event.created_at,
+            await Promise.all([
+              db.collection("events").updateOne(
+                {
+                  kind: 0,
+                  pubkey: userPubkey,
                 },
-              },
-              {
-                upsert: true,
-              },
-            );
-            try {
-              await ddbDocClient.send(
+                {
+                  $set: {
+                    id: kind0_event.id,
+                    kind: kind0_event.kind,
+                    content: kind0_event.content,
+                    tags: kind0_event.tags,
+                    sig: kind0_event.sig,
+                    created_at: kind0_event.created_at,
+                  },
+                },
+                {
+                  upsert: true,
+                },
+              ),
+              ddbDocClient.send(
                 new PutCommand({
                   TableName: "events",
                   Item: kind0_event,
                 }),
-              );
-            } catch (e) {
-              console.log(e);
-            }
+              ),
+            ]);
           } catch (e) {
             console.log(e);
           }
@@ -181,18 +179,16 @@ If no suitable texts are found, return an empty array.`;
           tags_map: convertTagsToDict(tags),
         });
       }
-      await db.collection("events").insertMany(kind1_events);
-      try {
-        await ddbDocClient.send(
+      await Promise.all([
+        db.collection("events").insertMany(kind1_events),
+        ddbDocClient.send(
           new BatchWriteCommand({
             RequestItems: {
               ["events"]: request_items,
             },
           }),
-        );
-      } catch (e) {
-        console.log(e);
-      }
+        ),
+      ]);
     } catch (_) {
       throw new Error("Intentional failure to trigger DLQ");
     }

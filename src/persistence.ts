@@ -56,19 +56,15 @@ export const handler: Handler = async (event: SNSEvent, context) => {
       }
 
       if (filter && update) {
-        await db
-          .collection("events")
-          .updateOne(filter, update, { upsert: true });
-        try {
-          await ddbDocClient.send(
+        await Promise.all([
+          db.collection("events").updateOne(filter, update, { upsert: true }),
+          ddbDocClient.send(
             new PutCommand({
               TableName: "events",
               Item: event,
             }),
-          );
-        } catch (e) {
-          console.log(e);
-        }
+          ),
+        ]);
       }
     } catch (_) {
       throw new Error("Intentional failure to trigger DLQ");

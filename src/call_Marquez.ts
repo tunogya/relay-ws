@@ -87,35 +87,28 @@ Please provide a description of a natural landscape using only plain text, witho
         "Gabriel García Márquez".toLowerCase(),
       ); // `sk` is a Uint8Array
 
-      try {
-        const tags = [["e", event.id]];
-        const comment_event = finalizeEvent(
-          {
-            kind: 1,
-            created_at: Math.floor(Date.now() / 1000),
-            tags: tags,
-            content: reply,
-          },
-          userSk,
-        );
-
-        await db.collection("events").insertOne({
+      const tags = [["e", event.id]];
+      const comment_event = finalizeEvent(
+        {
+          kind: 1,
+          created_at: Math.floor(Date.now() / 1000),
+          tags: tags,
+          content: reply,
+        },
+        userSk,
+      );
+      await Promise.all([
+        db.collection("events").insertOne({
           ...comment_event,
           tags_map: convertTagsToDict(tags),
-        });
-        try {
-          await ddbDocClient.send(
-            new PutCommand({
-              TableName: "events",
-              Item: comment_event,
-            }),
-          );
-        } catch (e) {
-          console.log(e);
-        }
-      } catch (e) {
-        console.log(e);
-      }
+        }),
+        ddbDocClient.send(
+          new PutCommand({
+            TableName: "events",
+            Item: comment_event,
+          }),
+        ),
+      ]);
     } catch (e) {
       console.log(e);
       throw new Error("Intentional failure to trigger DLQ");

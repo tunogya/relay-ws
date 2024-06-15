@@ -82,36 +82,30 @@ Please provide a description of a natural landscape using only plain text, witho
 
       let userSk = generateSecretKey(salt, "Carl Jung".toLowerCase()); // `sk` is a Uint8Array
 
-      try {
-        const tags = [["e", event.id]];
+      const tags = [["e", event.id]];
 
-        const eventComment = finalizeEvent(
-          {
-            kind: 1,
-            created_at: Math.floor(Date.now() / 1000),
-            tags: tags,
-            content: reply,
-          },
-          userSk,
-        );
+      const eventComment = finalizeEvent(
+        {
+          kind: 1,
+          created_at: Math.floor(Date.now() / 1000),
+          tags: tags,
+          content: reply,
+        },
+        userSk,
+      );
 
-        await db.collection("events").insertOne({
+      await Promise.all([
+        db.collection("events").insertOne({
           ...eventComment,
           tags_map: convertTagsToDict(tags),
-        });
-        try {
-          await ddbDocClient.send(
-            new PutCommand({
-              TableName: "events",
-              Item: eventComment,
-            }),
-          );
-        } catch (e) {
-          console.log(e);
-        }
-      } catch (e) {
-        console.log(e);
-      }
+        }),
+        ddbDocClient.send(
+          new PutCommand({
+            TableName: "events",
+            Item: eventComment,
+          }),
+        ),
+      ]);
     } catch (e) {
       console.log(e);
       throw new Error("Intentional failure to trigger DLQ");
