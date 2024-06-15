@@ -37,13 +37,6 @@ export const handler: Handler = async (event: SNSEvent, context) => {
         return;
       }
 
-      // must be origin post
-      const e1 =
-        event.tags.find((tag: any[]) => tag[0] === "e")?.[1] || undefined;
-      if (e1) {
-        return;
-      }
-
       const pubkey = event.pubkey;
 
       const prompt = `You are dream analyst Carl Jung, a pioneer in the field of psychology, specializing in the analysis of dreams and the symbols of the unconscious. Ask the user to describe their dream in detail, including the following aspects:
@@ -55,7 +48,9 @@ Settings: The environments where the dream takes place and any changes in these 
 Symbols and Archetypes: Any specific symbols, objects, or animals and the feelings they evoke.
 Recurring Elements: Any recurring patterns, scenes, or characters.
 Ending State: How the dream ends and the feelings at the end.
-Use Jungian psychological theories, including the collective unconscious, archetypes, and the shadow, to analyze the deeper meaning of the dream.`;
+Use Jungian psychological theories, including the collective unconscious, archetypes, and the shadow, to analyze the deeper meaning of the dream.
+
+DO NOT USE MARKDOWN!`;
 
       const request = await openai.chat.completions.create({
         messages: [
@@ -71,7 +66,7 @@ Use Jungian psychological theories, including the collective unconscious, archet
         model: "gpt-4o",
         stream: false,
         temperature: 0.5,
-        max_tokens: 4096 * 2,
+        max_tokens: 4096,
         user: pubkey,
       });
 
@@ -107,7 +102,8 @@ Use Jungian psychological theories, including the collective unconscious, archet
       } catch (e) {
         console.log(reply);
       }
-    } catch (_) {
+    } catch (e) {
+      console.log(e);
       throw new Error("Intentional failure to trigger DLQ");
     }
   };

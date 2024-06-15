@@ -37,13 +37,6 @@ export const handler: Handler = async (event: SNSEvent, context) => {
         return;
       }
 
-      // must be origin post
-      const e1 =
-        event.tags.find((tag: any[]) => tag[0] === "e")?.[1] || undefined;
-      if (e1) {
-        return;
-      }
-
       const pubkey = event.pubkey;
 
       const prompt = `Reimagining User's Memories through the Lens of Marquez
@@ -57,7 +50,9 @@ Guidelines:
 Notes:
 - Respect the user's memories and avoid exaggeration or distortion.
 - Try to empathize with the user's emotions and context, making the story more authentic and poignant.
-- Use language that is accessible and understandable to the user, while still capturing the essence of Marquez's style.Delve into the environment, emotions, and inner world of characters to reveal Marquez's emotional depth and complexity.`;
+- Use language that is accessible and understandable to the user, while still capturing the essence of Marquez's style.Delve into the environment, emotions, and inner world of characters to reveal Marquez's emotional depth and complexity.
+
+DO NOT USE MARKDOWN!`;
 
       const request = await openai.chat.completions.create({
         messages: [
@@ -73,7 +68,7 @@ Notes:
         model: "gpt-4o",
         stream: false,
         temperature: 0.5,
-        max_tokens: 4096 * 2,
+        max_tokens: 4096,
         user: pubkey,
       });
 
@@ -112,7 +107,8 @@ Notes:
       } catch (e) {
         console.log(reply);
       }
-    } catch (_) {
+    } catch (e) {
+      console.log(e);
       throw new Error("Intentional failure to trigger DLQ");
     }
   };
