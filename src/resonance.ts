@@ -4,7 +4,7 @@ import openai from "./utils/openai";
 import { generateSecretKey } from "./utils/generateSecretKey";
 import { convertTagsToDict } from "./utils/convertTagsToDict";
 import { ddbDocClient } from "./utils/ddbDocClient";
-import { BatchWriteCommand } from "@aws-sdk/lib-dynamodb";
+import { BatchWriteCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
 
 /**
  * resonance
@@ -94,8 +94,8 @@ If no suitable texts are found, return an empty array.`;
 
       const data = JSON.parse(reply)?.data || [];
 
-      let eventsKind1 = [];
-      let requestItems = [];
+      let kind1_events = [];
+      let request_items = [];
 
       for (let i = 0; i < data.length; i++) {
         const item = data[i];
@@ -112,7 +112,7 @@ If no suitable texts are found, return an empty array.`;
 
         if (!exist) {
           const randomNumber = Math.floor(Math.random() * 10000);
-          const eventUserInfo = finalizeEvent(
+          const kind0_event = finalizeEvent(
             {
               kind: 0,
               created_at: Math.floor(Date.now() / 1000),
@@ -126,25 +126,39 @@ If no suitable texts are found, return an empty array.`;
             },
             userSk,
           );
-          await db.collection("events").updateOne(
-            {
-              kind: 0,
-              pubkey: userPubkey,
-            },
-            {
-              $set: {
-                id: eventUserInfo.id,
-                kind: eventUserInfo.kind,
-                content: eventUserInfo.content,
-                tags: eventUserInfo.tags,
-                sig: eventUserInfo.sig,
-                created_at: eventUserInfo.created_at,
+          try {
+            await db.collection("events").updateOne(
+              {
+                kind: 0,
+                pubkey: userPubkey,
               },
-            },
-            {
-              upsert: true,
-            },
-          );
+              {
+                $set: {
+                  id: kind0_event.id,
+                  kind: kind0_event.kind,
+                  content: kind0_event.content,
+                  tags: kind0_event.tags,
+                  sig: kind0_event.sig,
+                  created_at: kind0_event.created_at,
+                },
+              },
+              {
+                upsert: true,
+              },
+            );
+            try {
+              await ddbDocClient.send(
+                new PutCommand({
+                  TableName: "events",
+                  Item: kind0_event,
+                }),
+              );
+            } catch (e) {
+              console.log(e);
+            }
+          } catch (e) {
+            console.log(e);
+          }
         }
 
         const tags = [["e", event.id]];
@@ -157,22 +171,22 @@ If no suitable texts are found, return an empty array.`;
           },
           userSk,
         );
-        requestItems.push({
+        request_items.push({
           PutRequest: {
             Item: comment_event,
           },
         });
-        eventsKind1.push({
+        kind1_events.push({
           ...comment_event,
           tags_map: convertTagsToDict(tags),
         });
       }
-      await db.collection("events").insertMany(eventsKind1);
+      await db.collection("events").insertMany(kind1_events);
       try {
         await ddbDocClient.send(
           new BatchWriteCommand({
             RequestItems: {
-              ["events"]: requestItems,
+              ["events"]: request_items,
             },
           }),
         );
