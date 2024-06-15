@@ -3,6 +3,8 @@ import { connectToDatabase } from "./utils/astradb";
 import openai from "./utils/openai";
 import { generateSecretKey } from "./utils/generateSecretKey";
 import { convertTagsToDict } from "./utils/convertTagsToDict";
+import { ddbDocClient } from "./utils/ddbDocClient";
+import { BatchWriteCommand } from "@aws-sdk/lib-dynamodb";
 
 /**
  * resonance
@@ -93,6 +95,7 @@ If no suitable texts are found, return an empty array.`;
       const data = JSON.parse(reply)?.data || [];
 
       let eventsKind1 = [];
+      let requestItems = [];
 
       for (let i = 0; i < data.length; i++) {
         const item = data[i];
@@ -145,7 +148,7 @@ If no suitable texts are found, return an empty array.`;
         }
 
         const tags = [["e", event.id]];
-        const eventComment = finalizeEvent(
+        const comment_event = finalizeEvent(
           {
             kind: 1,
             created_at: Math.floor(Date.now() / 1000),
@@ -154,12 +157,28 @@ If no suitable texts are found, return an empty array.`;
           },
           userSk,
         );
+        requestItems.push({
+          PutRequest: {
+            Item: comment_event,
+          },
+        });
         eventsKind1.push({
-          ...eventComment,
+          ...comment_event,
           tags_map: convertTagsToDict(tags),
         });
       }
       await db.collection("events").insertMany(eventsKind1);
+      try {
+        await ddbDocClient.send(
+          new BatchWriteCommand({
+            RequestItems: {
+              ["events"]: requestItems,
+            },
+          }),
+        );
+      } catch (e) {
+        console.log(e);
+      }
     } catch (_) {
       throw new Error("Intentional failure to trigger DLQ");
     }

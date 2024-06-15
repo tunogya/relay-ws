@@ -3,6 +3,8 @@ import { connectToDatabase } from "./utils/astradb";
 import openai from "./utils/openai";
 import { generateSecretKey } from "./utils/generateSecretKey";
 import { convertTagsToDict } from "./utils/convertTagsToDict";
+import { ddbDocClient } from "./utils/ddbDocClient";
+import { PutCommand } from "@aws-sdk/lib-dynamodb";
 
 /**
  * call_CarlJung
@@ -93,14 +95,22 @@ DO NOT USE MARKDOWN!`;
           userSk,
         );
 
-        const result = await db.collection("events").insertOne({
+        await db.collection("events").insertOne({
           ...eventComment,
           tags_map: convertTagsToDict(tags),
         });
-
-        console.log(result);
+        try {
+          await ddbDocClient.send(
+            new PutCommand({
+              TableName: "events",
+              Item: eventComment,
+            }),
+          );
+        } catch (e) {
+          console.log(e);
+        }
       } catch (e) {
-        console.log(reply);
+        console.log(e);
       }
     } catch (e) {
       console.log(e);

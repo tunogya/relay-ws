@@ -22,6 +22,7 @@ provider:
   iam:
     role:
       managedPolicies:
+        - "arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess"
         - "arn:aws:iam::aws:policy/AmazonSNSFullAccess"
 
 functions:

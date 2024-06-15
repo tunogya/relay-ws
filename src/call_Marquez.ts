@@ -3,6 +3,8 @@ import { connectToDatabase } from "./utils/astradb";
 import openai from "./utils/openai";
 import { generateSecretKey } from "./utils/generateSecretKey";
 import { convertTagsToDict } from "./utils/convertTagsToDict";
+import { ddbDocClient } from "./utils/ddbDocClient";
+import { PutCommand } from "@aws-sdk/lib-dynamodb";
 
 /**
  * call_Marquez
@@ -87,8 +89,7 @@ DO NOT USE MARKDOWN!`;
 
       try {
         const tags = [["e", event.id]];
-
-        const eventComment = finalizeEvent(
+        const comment_event = finalizeEvent(
           {
             kind: 1,
             created_at: Math.floor(Date.now() / 1000),
@@ -98,14 +99,22 @@ DO NOT USE MARKDOWN!`;
           userSk,
         );
 
-        const result = await db.collection("events").insertOne({
-          ...eventComment,
+        await db.collection("events").insertOne({
+          ...comment_event,
           tags_map: convertTagsToDict(tags),
         });
-
-        console.log(result);
+        try {
+          await ddbDocClient.send(
+            new PutCommand({
+              TableName: "events",
+              Item: comment_event,
+            }),
+          );
+        } catch (e) {
+          console.log(e);
+        }
       } catch (e) {
-        console.log(reply);
+        console.log(e);
       }
     } catch (e) {
       console.log(e);

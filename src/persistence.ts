@@ -1,6 +1,8 @@
 import { Handler, SNSEvent, SNSEventRecord } from "aws-lambda";
 import { connectToDatabase } from "./utils/astradb";
 import { convertTagsToDict } from "./utils/convertTagsToDict";
+import { ddbDocClient } from "./utils/ddbDocClient";
+import { PutCommand } from "@aws-sdk/lib-dynamodb";
 
 /**
  * persistence
@@ -57,6 +59,16 @@ export const handler: Handler = async (event: SNSEvent, context) => {
         await db
           .collection("events")
           .updateOne(filter, update, { upsert: true });
+        try {
+          await ddbDocClient.send(
+            new PutCommand({
+              TableName: "events",
+              Item: event,
+            }),
+          );
+        } catch (e) {
+          console.log(e);
+        }
       }
     } catch (_) {
       throw new Error("Intentional failure to trigger DLQ");
