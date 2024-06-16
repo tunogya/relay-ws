@@ -50,9 +50,7 @@ Settings: The environments where the dream takes place and any changes in these 
 Symbols and Archetypes: Any specific symbols, objects, or animals and the feelings they evoke.
 Recurring Elements: Any recurring patterns, scenes, or characters.
 Ending State: How the dream ends and the feelings at the end.
-Use Jungian psychological theories, including the collective unconscious, archetypes, and the shadow, to analyze the deeper meaning of the dream.
-
-Please provide a description of a natural landscape using only plain text, without any Markdown formatting.`;
+Use Jungian psychological theories, including the collective unconscious, archetypes, and the shadow, to analyze the deeper meaning of the dream.`;
 
       const request = await openai.chat.completions.create({
         messages: [
