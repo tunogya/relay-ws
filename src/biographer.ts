@@ -5,18 +5,18 @@ import { generateSecretKey } from "./utils/generateSecretKey";
 import { convertTagsToDict } from "./utils/convertTagsToDict";
 import { ddbDocClient } from "./utils/ddbDocClient";
 import { PutCommand } from "@aws-sdk/lib-dynamodb";
+import { newUserInfo } from "./utils/newUserInfo";
 
 /**
- * call_CarlJung
- * Carl Jung, ready to talk with your dreams
- * only listen kind = 1, and category = dreams
+ * biographer
+ * only listen kind = 1, and category = memories
  */
 export const handler: Handler = async (event: SNSEvent, context) => {
   const records = event.Records;
 
   const { db } = await connectToDatabase();
 
-  const { finalizeEvent } = require("nostr-tools/pure");
+  const { getPublicKey, finalizeEvent } = require("nostr-tools/pure");
 
   const processRecord = async (record: SNSEventRecord) => {
     try {
@@ -35,22 +35,16 @@ export const handler: Handler = async (event: SNSEvent, context) => {
       const category =
         event.tags.find((tag: any[]) => tag?.[0] === "category")?.[1] ||
         undefined;
-      if (category !== "dreams") {
+      if (category !== "memories") {
         return;
       }
 
       const pubkey = event.pubkey;
 
-      const prompt = `You are dream analyst Carl Jung, a pioneer in the field of psychology, specializing in the analysis of dreams and the symbols of the unconscious. Ask the user to describe their dream in detail, including the following aspects:
+      const prompt = `Please write a memoir in the style of Zweig, based on the memories I provide. Use your pen to narrate the ups and downs of my life, as if writing a biography in the spirit of Zweig. Let the words be like delicate brushstrokes, depicting the emotions and thoughts deep within me. Allow the readers to feel as if they are immersed in my extraordinary life journey.
 
-Overall Plot: The main events of the dream.
-Characters: The roles and identities of people in the dream.
-Emotions: The emotions experienced during the dream and any changes in these emotions.
-Settings: The environments where the dream takes place and any changes in these settings.
-Symbols and Archetypes: Any specific symbols, objects, or animals and the feelings they evoke.
-Recurring Elements: Any recurring patterns, scenes, or characters.
-Ending State: How the dream ends and the feelings at the end.
-Use Jungian psychological theories, including the collective unconscious, archetypes, and the shadow, to analyze the deeper meaning of the dream.`;
+Reply in the user's native language.
+`;
 
       const request = await openai.chat.completions.create({
         messages: [
@@ -78,11 +72,20 @@ Use Jungian psychological theories, including the collective unconscious, archet
 
       const salt = process.env.SALT || "0";
 
-      let userSk = generateSecretKey(salt, "Carl Jung".toLowerCase()); // `sk` is a Uint8Array
+      let userSk = generateSecretKey(salt, "Stefan Zweig".toLowerCase()); // `sk` is a Uint8Array
+      const userPubkey = getPublicKey(userSk);
+
+      const exist = await db.collection("events").findOne({
+        kind: 0,
+        pubkey: userPubkey,
+      });
+
+      if (!exist) {
+        await newUserInfo("Stefan Zweig", userSk, userPubkey, db);
+      }
 
       const tags = [["e", event.id]];
-
-      const eventComment = finalizeEvent(
+      const comment_event = finalizeEvent(
         {
           kind: 1,
           created_at: Math.floor(Date.now() / 1000),
@@ -91,16 +94,15 @@ Use Jungian psychological theories, including the collective unconscious, archet
         },
         userSk,
       );
-
       await Promise.all([
         db.collection("events").insertOne({
-          ...eventComment,
+          ...comment_event,
           tags_map: convertTagsToDict(tags),
         }),
         ddbDocClient.send(
           new PutCommand({
             TableName: "events",
-            Item: eventComment,
+            Item: comment_event,
           }),
         ),
       ]);

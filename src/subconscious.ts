@@ -5,18 +5,19 @@ import { generateSecretKey } from "./utils/generateSecretKey";
 import { convertTagsToDict } from "./utils/convertTagsToDict";
 import { ddbDocClient } from "./utils/ddbDocClient";
 import { PutCommand } from "@aws-sdk/lib-dynamodb";
+import { newUserInfo } from "./utils/newUserInfo";
 
 /**
- * call_Marquez
- * Marquez, ready to rewrite your memory
- * only listen kind = 1, and category = memories
+ * subconscious
+ * Carl Jung, ready to talk with your dreams
+ * only listen kind = 1, and category = dreams
  */
 export const handler: Handler = async (event: SNSEvent, context) => {
   const records = event.Records;
 
   const { db } = await connectToDatabase();
 
-  const { finalizeEvent } = require("nostr-tools/pure");
+  const { getPublicKey, finalizeEvent } = require("nostr-tools/pure");
 
   const processRecord = async (record: SNSEventRecord) => {
     try {
@@ -35,24 +36,22 @@ export const handler: Handler = async (event: SNSEvent, context) => {
       const category =
         event.tags.find((tag: any[]) => tag?.[0] === "category")?.[1] ||
         undefined;
-      if (category !== "memories") {
+      if (category !== "dreams") {
         return;
       }
 
       const pubkey = event.pubkey;
 
-      const prompt = `Reimagining User's Memories through the Lens of Marquez
-Requirement: The user will share their memories with you, and you are tasked with reimagining them through the perspective of Marquez. Your writing should be similar to Marquez's style, making the story engaging and captivating.
+      const prompt = `You are dream analyst Carl Jung, a pioneer in the field of psychology, specializing in the analysis of dreams and the symbols of the unconscious. Ask the user to describe their dream in detail, including the following aspects:
 
-Guidelines:
-- Use rich details and vivid imagery, infusing the story with mystery and romanticism.
-- Employ long sentences and complex structures to showcase Marquez's literary style.
-- Introduce elements of fantasy or surrealism to enhance the story's imagination and intrigue.
-
-Notes:
-- Respect the user's memories and avoid exaggeration or distortion.
-- Try to empathize with the user's emotions and context, making the story more authentic and poignant.
-- Use language that is accessible and understandable to the user, while still capturing the essence of Marquez's style.Delve into the environment, emotions, and inner world of characters to reveal Marquez's emotional depth and complexity.`;
+Overall Plot: The main events of the dream.
+Characters: The roles and identities of people in the dream.
+Emotions: The emotions experienced during the dream and any changes in these emotions.
+Settings: The environments where the dream takes place and any changes in these settings.
+Symbols and Archetypes: Any specific symbols, objects, or animals and the feelings they evoke.
+Recurring Elements: Any recurring patterns, scenes, or characters.
+Ending State: How the dream ends and the feelings at the end.
+Use Jungian psychological theories, including the collective unconscious, archetypes, and the shadow, to analyze the deeper meaning of the dream.`;
 
       const request = await openai.chat.completions.create({
         messages: [
@@ -80,13 +79,21 @@ Notes:
 
       const salt = process.env.SALT || "0";
 
-      let userSk = generateSecretKey(
-        salt,
-        "Gabriel García Márquez".toLowerCase(),
-      ); // `sk` is a Uint8Array
+      let userSk = generateSecretKey(salt, "Carl Jung".toLowerCase()); // `sk` is a Uint8Array
+      const userPubkey = getPublicKey(userSk);
+
+      const exist = await db.collection("events").findOne({
+        kind: 0,
+        pubkey: userPubkey,
+      });
+
+      if (!exist) {
+        await newUserInfo("Carl Jung", userSk, userPubkey, db);
+      }
 
       const tags = [["e", event.id]];
-      const comment_event = finalizeEvent(
+
+      const eventComment = finalizeEvent(
         {
           kind: 1,
           created_at: Math.floor(Date.now() / 1000),
@@ -95,15 +102,16 @@ Notes:
         },
         userSk,
       );
+
       await Promise.all([
         db.collection("events").insertOne({
-          ...comment_event,
+          ...eventComment,
           tags_map: convertTagsToDict(tags),
         }),
         ddbDocClient.send(
           new PutCommand({
             TableName: "events",
-            Item: comment_event,
+            Item: eventComment,
           }),
         ),
       ]);

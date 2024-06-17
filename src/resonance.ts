@@ -4,7 +4,8 @@ import openai from "./utils/openai";
 import { generateSecretKey } from "./utils/generateSecretKey";
 import { convertTagsToDict } from "./utils/convertTagsToDict";
 import { ddbDocClient } from "./utils/ddbDocClient";
-import { BatchWriteCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
+import { BatchWriteCommand } from "@aws-sdk/lib-dynamodb";
+import { newUserInfo } from "./utils/newUserInfo";
 
 /**
  * resonance
@@ -111,52 +112,7 @@ If no suitable texts are found, return an empty array.`;
         });
 
         if (!exist) {
-          const randomNumber = Math.floor(Math.random() * 10000);
-          const kind0_event = finalizeEvent(
-            {
-              kind: 0,
-              created_at: Math.floor(Date.now() / 1000),
-              tags: [],
-              content: JSON.stringify({
-                name: item.name,
-                picture: `https://www.larvalabs.com/cryptopunks/cryptopunk${randomNumber
-                  .toString()
-                  .padStart(4, "0")}.png`,
-              }),
-            },
-            userSk,
-          );
-          try {
-            await Promise.all([
-              db.collection("events").updateOne(
-                {
-                  kind: 0,
-                  pubkey: userPubkey,
-                },
-                {
-                  $set: {
-                    id: kind0_event.id,
-                    kind: kind0_event.kind,
-                    content: kind0_event.content,
-                    tags: kind0_event.tags,
-                    sig: kind0_event.sig,
-                    created_at: kind0_event.created_at,
-                  },
-                },
-                {
-                  upsert: true,
-                },
-              ),
-              ddbDocClient.send(
-                new PutCommand({
-                  TableName: "events",
-                  Item: kind0_event,
-                }),
-              ),
-            ]);
-          } catch (e) {
-            console.log(e);
-          }
+          await newUserInfo(item.name, userSk, userPubkey, db);
         }
 
         const tags = [["e", event.id]];

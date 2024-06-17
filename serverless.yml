@@ -64,9 +64,9 @@ functions:
           filterPolicy:
             kind:
               - 1
-  call_CarlJung:
-    name: "nostr-call_CarlJung"
-    handler: "src/call_CarlJung.handler"
+  subconscious:
+    name: "nostr-subconscious"
+    handler: "src/subconscious.handler"
     timeout: 30
     memorySize: 256
     architecture: arm64
@@ -80,9 +80,9 @@ functions:
               - 1
             category:
               - dreams
-  call_Marquez:
-    name: "nostr-call_Marquez"
-    handler: "src/call_Marquez.handler"
+  biographer:
+    name: "nostr-biographer"
+    handler: "src/biographer.handler"
     timeout: 30
     memorySize: 256
     architecture: arm64
@@ -110,3 +110,5 @@ functions:
           filterPolicy:
             kind:
               - 1
+            category:
+              - reflections
