@@ -114,21 +114,21 @@ functions:
               - reflections
   relay_event:
     name: "nostr-relay-EVENT"
-    handler: "src/EVENT.handler"
+    handler: "src/router/EVENT.handler"
     timeout: 30
     memorySize: 256
     architecture: arm64
     maximumRetryAttempts: 1
   relay_close:
     name: "nostr-relay-CLOSE"
-    handler: "src/CLOSE.handler"
+    handler: "src/router/CLOSE.handler"
     timeout: 30
     memorySize: 256
     architecture: arm64
     maximumRetryAttempts: 1
   relay_req:
     name: "nostr-relay-REQ"
-    handler: "src/REQ.handler"
+    handler: "src/router/REQ.handler"
     timeout: 30
     memorySize: 256
     architecture: arm64
