@@ -112,3 +112,24 @@ functions:
               - 1
             category:
               - reflections
+  relay_event:
+    name: "nostr-relay-EVENT"
+    handler: "src/EVENT.handler"
+    timeout: 30
+    memorySize: 256
+    architecture: arm64
+    maximumRetryAttempts: 1
+  relay_close:
+    name: "nostr-relay-CLOSE"
+    handler: "src/CLOSE.handler"
+    timeout: 30
+    memorySize: 256
+    architecture: arm64
+    maximumRetryAttempts: 1
+  relay_req:
+    name: "nostr-relay-REQ"
+    handler: "src/REQ.handler"
+    timeout: 30
+    memorySize: 256
+    architecture: arm64
+    maximumRetryAttempts: 1
