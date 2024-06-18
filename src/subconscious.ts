@@ -91,8 +91,10 @@ Use Jungian psychological theories, including the collective unconscious, archet
         await newUserInfo("Carl Jung", userSk, userPubkey, db);
       }
 
-      const tags = [["e", event.id]];
-
+      const tags = [
+        ["e", event.id],
+        ["p", event.pubkey],
+      ];
       const eventComment = finalizeEvent(
         {
           kind: 1,

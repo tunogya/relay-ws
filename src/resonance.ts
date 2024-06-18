@@ -115,7 +115,10 @@ If no suitable texts are found, return an empty array.`;
           await newUserInfo(item.name, userSk, userPubkey, db);
         }
 
-        const tags = [["e", event.id]];
+        const tags = [
+          ["e", event.id],
+          ["p", event.pubkey],
+        ];
         const comment_event = finalizeEvent(
           {
             kind: 1,
