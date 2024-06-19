@@ -94,7 +94,7 @@ export const handler: Handler = async (event: APIGatewayEvent, context) => {
     return {
       statusCode: 200,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(["OK", "", false, `Something went wrong.`]),
+      body: JSON.stringify(["OK", null, false, `Something went wrong.`]),
     };
   }
 };
