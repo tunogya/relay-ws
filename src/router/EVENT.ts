@@ -9,8 +9,8 @@ export const handler: Handler = async (event: APIGatewayEvent, context) => {
     if (messageType !== "EVENT") {
       return;
     }
-    // @ts-ignore
     const { id, kind, pubkey, created_at, content, tags, sig } = JSON.parse(
+      // @ts-ignore
       event.body,
     )[1];
     // isPubkeyAllowed
