@@ -4,11 +4,13 @@ import { PublishCommand } from "@aws-sdk/client-sns";
 
 export const handler: Handler = async (event: APIGatewayEvent, context) => {
   try {
-    // @ts-ignore
-    const { id, kind, pubkey, created_at, content, tags, sig } = JSON.parse(
+    const messageArray = JSON.parse(
       // @ts-ignore
       event.body,
-    )[1];
+    );
+    // @ts-ignore
+    const { id, kind, pubkey, created_at, content, tags, sig } =
+      messageArray[1];
     // isPubkeyAllowed
     if (!isPubkeyAllowed(pubkey)) {
       return {
@@ -89,7 +91,11 @@ export const handler: Handler = async (event: APIGatewayEvent, context) => {
       body: JSON.stringify(["OK", id, true, `Event received successfully.`]),
     };
   } catch (e) {
-    return;
+    return {
+      statusCode: 200,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(["OK", "", false, `Something went wrong.`]),
+    };
   }
 };
 
