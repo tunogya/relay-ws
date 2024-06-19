@@ -133,24 +133,3 @@ functions:
     memorySize: 256
     architecture: arm64
     maximumRetryAttempts: 1
-  relay_connect:
-    name: "nostr-relay-connect"
-    handler: "src/router/connect.handler"
-    timeout: 30
-    memorySize: 256
-    architecture: arm64
-    maximumRetryAttempts: 1
-  relay_disconnect:
-    name: "nostr-relay-disconnect"
-    handler: "src/router/disconnect.handler"
-    timeout: 30
-    memorySize: 256
-    architecture: arm64
-    maximumRetryAttempts: 1
-  relay_default:
-    name: "nostr-relay-default"
-    handler: "src/router/default.handler"
-    timeout: 30
-    memorySize: 256
-    architecture: arm64
-    maximumRetryAttempts: 1
