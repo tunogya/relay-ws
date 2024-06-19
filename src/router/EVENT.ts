@@ -11,6 +11,19 @@ export const handler: Handler = async (event: APIGatewayEvent, context) => {
     }
     // @ts-ignore
     const { id, kind, pubkey, created_at, content, tags, sig } = event[1];
+    const { verifyEvent } = require("nostr-tools/pure");
+    const isValid = verifyEvent({
+      id,
+      kind,
+      pubkey,
+      created_at,
+      content,
+      tags,
+      sig,
+    });
+    if (!isValid) {
+      return;
+    }
     const category =
       tags.find((tag: any[]) => tag[0] === "category")?.[1] || undefined;
     const message = await snsClient.send(
@@ -36,19 +49,8 @@ export const handler: Handler = async (event: APIGatewayEvent, context) => {
         },
       }),
     );
-
-    return {
-      statusCode: 200,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(message),
-    };
+    return;
   } catch (e) {
-    return {
-      statusCode: 200,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        error: "Something went wrong.",
-      }),
-    };
+    return;
   }
 };
