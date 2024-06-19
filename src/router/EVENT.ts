@@ -11,6 +11,31 @@ export const handler: Handler = async (event: APIGatewayEvent, context) => {
     }
     // @ts-ignore
     const { id, kind, pubkey, created_at, content, tags, sig } = event[1];
+    // isPubkeyAllowed
+    if (!isPubkeyAllowed(pubkey)) {
+      return {
+        statusCode: 200,
+        body: JSON.stringify([
+          "OK",
+          id,
+          false,
+          "Denied. The pubkey is not allowed.",
+        ]),
+      };
+    }
+    // Check if the event kind is allowed
+    if (!isEventKindAllowed(kind)) {
+      return {
+        statusCode: 200,
+        body: JSON.stringify([
+          "OK",
+          id,
+          false,
+          `Denied. Event kind ${kind} is not allowed.`,
+        ]),
+      };
+    }
+
     const { verifyEvent } = require("nostr-tools/pure");
     const isValid = verifyEvent({
       id,
@@ -22,11 +47,19 @@ export const handler: Handler = async (event: APIGatewayEvent, context) => {
       sig,
     });
     if (!isValid) {
-      return;
+      return {
+        statusCode: 200,
+        body: JSON.stringify([
+          "OK",
+          id,
+          false,
+          `Invalid: signature verification failed.`,
+        ]),
+      };
     }
     const category =
       tags.find((tag: any[]) => tag[0] === "category")?.[1] || undefined;
-    const message = await snsClient.send(
+    await snsClient.send(
       new PublishCommand({
         TopicArn: process.env.NOSTR_SNS_ARN,
         Message: JSON.stringify({
@@ -49,8 +82,19 @@ export const handler: Handler = async (event: APIGatewayEvent, context) => {
         },
       }),
     );
-    return;
+    return {
+      statusCode: 200,
+      body: JSON.stringify(["OK", id, true, `Event received successfully.`]),
+    };
   } catch (e) {
     return;
   }
+};
+
+const isPubkeyAllowed = (pubkey: string) => {
+  return true;
+};
+
+const isEventKindAllowed = (kind: number) => {
+  return true;
 };
