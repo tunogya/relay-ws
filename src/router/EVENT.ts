@@ -5,12 +5,14 @@ import { PublishCommand } from "@aws-sdk/client-sns";
 export const handler: Handler = async (event: APIGatewayEvent, context) => {
   try {
     // @ts-ignore
-    const messageType = event[0];
+    const messageType = JSON.parse(event.body)[0];
     if (messageType !== "EVENT") {
       return;
     }
     // @ts-ignore
-    const { id, kind, pubkey, created_at, content, tags, sig } = event[1];
+    const { id, kind, pubkey, created_at, content, tags, sig } = JSON.parse(
+      event.body,
+    )[1];
     // isPubkeyAllowed
     if (!isPubkeyAllowed(pubkey)) {
       return {
