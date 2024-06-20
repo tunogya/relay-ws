@@ -13,6 +13,7 @@ provider:
   deploymentMethod: "direct"
   region: "ap-northeast-1"
   environment:
+    NOSTR_EVENTS_SNS_ARN: ${env:NOSTR_EVENTS_SNS_ARN}
     OPENAI_API_KEY: ${env:OPENAI_API_KEY}
     UPSTASH_REDIS_REST_URL: ${env:UPSTASH_REDIS_REST_URL}
     UPSTASH_REDIS_REST_TOKEN: ${env:UPSTASH_REDIS_REST_TOKEN}
