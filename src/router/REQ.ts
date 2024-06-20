@@ -5,10 +5,8 @@ import {
 } from "@aws-sdk/client-apigatewaymanagementapi";
 
 export const handler: Handler = async (event: APIGatewayEvent, context) => {
-  const domain = event.requestContext.domainName;
-  const stage = event.requestContext.stage;
   const connectionId = event.requestContext.connectionId;
-  const callbackUrl = `https://${domain}/${stage}`;
+  const callbackUrl = `https://relay.abandon.ai`;
   const client = new ApiGatewayManagementApiClient({ endpoint: callbackUrl });
 
   try {
