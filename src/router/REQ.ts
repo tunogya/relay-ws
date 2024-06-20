@@ -9,6 +9,7 @@ import { PostToConnectionCommand } from "@aws-sdk/client-apigatewaymanagementapi
 /*
  * From client to relay:
  * ["REQ", <subscription_id>, <filters1>, <filters2>, ...]
+ * subscription_id = pubkey
  *
  * filtersX:
  * {
@@ -57,7 +58,9 @@ export const handler: Handler = async (event: APIGatewayEvent, context) => {
     ) {
       const pubkey = authors[0];
       if (pubkey) {
-        await redisClient.set(`p2cid:${pubkey}`, connectionId);
+        await redisClient.set(`p2cid:${pubkey}`, connectionId, {
+          ex: 24 * 60 * 60,
+        });
       }
     }
     if (since) {
