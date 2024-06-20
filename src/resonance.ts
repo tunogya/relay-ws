@@ -6,6 +6,11 @@ import { convertTagsToDict } from "./utils/convertTagsToDict";
 import { ddbDocClient } from "./utils/ddbDocClient";
 import { BatchWriteCommand } from "@aws-sdk/lib-dynamodb";
 import { newUserInfo } from "./utils/newUserInfo";
+import redisClient from "./utils/redisClient";
+import apiGatewayClient from "./utils/apiGatewayClient";
+import { PostToConnectionCommand } from "@aws-sdk/client-apigatewaymanagementapi";
+// @ts-ignore
+import { getPublicKey, finalizeEvent, verifyEvent } from "nostr-tools/pure";
 
 /**
  * resonance
@@ -16,12 +21,9 @@ export const handler: Handler = async (event: SNSEvent, context) => {
 
   const { db } = await connectToDatabase();
 
-  const { getPublicKey, finalizeEvent } = require("nostr-tools/pure");
-
   const processRecord = async (record: SNSEventRecord) => {
     try {
       const event = JSON.parse(record.Sns.Message);
-      const { verifyEvent } = require("nostr-tools/pure");
       const isValid = verifyEvent(event);
 
       if (!isValid) {
@@ -98,6 +100,8 @@ If no suitable texts are found, return an empty array.`;
       let kind1_events = [];
       let request_items = [];
 
+      const connectionId = await redisClient.get(`p2cid:${event.pubkey}`);
+
       for (let i = 0; i < data.length; i++) {
         const item = data[i];
 
@@ -148,6 +152,18 @@ If no suitable texts are found, return an empty array.`;
           }),
         ),
       ]);
+      if (connectionId) {
+        try {
+          await apiGatewayClient.send(
+            new PostToConnectionCommand({
+              ConnectionId: `${connectionId}`,
+              Data: JSON.stringify(["EVENT", event.pubkey, event]),
+            }),
+          );
+        } catch (e) {
+          console.log(e);
+        }
+      }
     } catch (_) {
       throw new Error("Intentional failure to trigger DLQ");
     }

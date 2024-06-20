@@ -6,6 +6,11 @@ import { convertTagsToDict } from "./utils/convertTagsToDict";
 import { ddbDocClient } from "./utils/ddbDocClient";
 import { PutCommand } from "@aws-sdk/lib-dynamodb";
 import { newUserInfo } from "./utils/newUserInfo";
+import redisClient from "./utils/redisClient";
+import apiGatewayClient from "./utils/apiGatewayClient";
+import { PostToConnectionCommand } from "@aws-sdk/client-apigatewaymanagementapi";
+// @ts-ignore
+import { verifyEvent } from "nostr-tools/pure";
 
 /**
  * subconscious
@@ -22,7 +27,6 @@ export const handler: Handler = async (event: SNSEvent, context) => {
   const processRecord = async (record: SNSEventRecord) => {
     try {
       const event = JSON.parse(record.Sns.Message);
-      const { verifyEvent } = require("nostr-tools/pure");
       const isValid = verifyEvent(event);
 
       if (!isValid) {
@@ -117,6 +121,19 @@ Use Jungian psychological theories, including the collective unconscious, archet
           }),
         ),
       ]);
+      const connectionId = await redisClient.get(`p2cid:${event.pubkey}`);
+      if (connectionId) {
+        try {
+          await apiGatewayClient.send(
+            new PostToConnectionCommand({
+              ConnectionId: `${connectionId}`,
+              Data: JSON.stringify(["EVENT", event.pubkey, event]),
+            }),
+          );
+        } catch (e) {
+          console.log(e);
+        }
+      }
     } catch (e) {
       console.log(e);
       throw new Error("Intentional failure to trigger DLQ");

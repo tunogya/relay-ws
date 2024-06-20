@@ -5,6 +5,8 @@ import { Filter } from "nostr-tools/filter";
 import { connectToDatabase } from "../utils/astradb";
 import apiGatewayClient from "../utils/apiGatewayClient";
 import { PostToConnectionCommand } from "@aws-sdk/client-apigatewaymanagementapi";
+// @ts-ignore
+import { verifyEvent } from "nostr-tools/pure";
 
 /*
  * From client to relay:
@@ -77,16 +79,40 @@ export const handler: Handler = async (event: APIGatewayEvent, context) => {
       .find(query)
       .limit(limit || 20);
     while (await cursor.hasNext()) {
-      const event = await cursor.next();
-      try {
-        await apiGatewayClient.send(
-          new PostToConnectionCommand({
-            ConnectionId: connectionId,
-            Data: JSON.stringify(["EVENT", subscription_id, event]),
-          }),
-        );
-      } catch (e) {
-        console.log(e);
+      const doc = await cursor.next();
+      if (doc) {
+        const { id, pubkey, kind, created_at, content, tags, sig } = doc;
+        const isValid = verifyEvent({
+          id,
+          pubkey,
+          kind,
+          created_at,
+          content,
+          tags,
+          sig,
+        });
+        if (isValid) {
+          await apiGatewayClient
+            .send(
+              new PostToConnectionCommand({
+                ConnectionId: connectionId,
+                Data: JSON.stringify([
+                  "EVENT",
+                  subscription_id,
+                  {
+                    id: doc.id,
+                    pubkey: doc.pubkey,
+                    created_at: doc.created_at,
+                    kind: doc.kind,
+                    content: doc.content,
+                    tags: doc.tags,
+                    sig: doc.sig,
+                  },
+                ]),
+              }),
+            )
+            .catch((e) => console.log(e));
+        }
       }
     }
   };

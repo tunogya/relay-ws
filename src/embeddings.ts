@@ -1,6 +1,8 @@
 import { Handler, SNSEvent, SNSEventRecord } from "aws-lambda";
 import { connectToDatabase } from "./utils/astradb";
 import openai from "./utils/openai";
+// @ts-ignore
+import { verifyEvent } from "nostr-tools/pure";
 
 /**
  * embeddings
@@ -14,7 +16,6 @@ export const handler: Handler = async (event: SNSEvent, context) => {
   const processRecord = async (record: SNSEventRecord) => {
     try {
       const event = JSON.parse(record.Sns.Message);
-      const { verifyEvent } = require("nostr-tools/pure");
       const isValid = verifyEvent(event);
 
       if (!isValid) {

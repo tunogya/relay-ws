@@ -3,6 +3,8 @@ import { connectToDatabase } from "./utils/astradb";
 import { convertTagsToDict } from "./utils/convertTagsToDict";
 import { ddbDocClient } from "./utils/ddbDocClient";
 import { PutCommand } from "@aws-sdk/lib-dynamodb";
+// @ts-ignore
+import { verifyEvent } from "nostr-tools/pure";
 
 /**
  * persistence
@@ -18,7 +20,6 @@ export const handler: Handler = async (event: SNSEvent, context) => {
   const processRecord = async (record: SNSEventRecord) => {
     try {
       const event = JSON.parse(record.Sns.Message);
-      const { verifyEvent } = require("nostr-tools/pure");
       const isValid = verifyEvent(event);
 
       if (!isValid) {
