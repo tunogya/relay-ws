@@ -6,8 +6,10 @@ import {
 
 export const handler: Handler = async (event: APIGatewayEvent, context) => {
   const connectionId = event.requestContext.connectionId;
-  const callbackUrl = `https://relay.abandon.ai`;
-  const client = new ApiGatewayManagementApiClient({ endpoint: callbackUrl });
+  const client = new ApiGatewayManagementApiClient({
+    endpoint: `https://relay.abandon.ai`,
+    region: "ap-northeast-1",
+  });
 
   try {
     await client.send(
@@ -21,7 +23,5 @@ export const handler: Handler = async (event: APIGatewayEvent, context) => {
   }
   return {
     statusCode: 200,
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(event),
   };
 };
