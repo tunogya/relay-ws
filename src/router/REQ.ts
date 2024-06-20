@@ -35,6 +35,10 @@ export const handler: Handler = async (event: APIGatewayEvent, context) => {
     event.body,
   );
   const subscription_id = messageArray?.[1];
+  // pubkey = subscription_id
+  await redisClient.set(`p2cid:${subscription_id}`, connectionId, {
+    ex: 24 * 60 * 60,
+  });
   const filters: Filter[] = messageArray?.slice(2) || [];
 
   const { db } = await connectToDatabase();
@@ -50,20 +54,6 @@ export const handler: Handler = async (event: APIGatewayEvent, context) => {
     }
     if (kinds && kinds.length > 0) {
       query.kind = { $in: kinds };
-    }
-    if (
-      authors &&
-      authors.length === 1 &&
-      kinds &&
-      kinds.length === 1 &&
-      kinds[0] === 1
-    ) {
-      const pubkey = authors[0];
-      if (pubkey) {
-        await redisClient.set(`p2cid:${pubkey}`, connectionId, {
-          ex: 24 * 60 * 60,
-        });
-      }
     }
     if (since) {
       query.created_at = { $gte: since };
