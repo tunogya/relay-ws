@@ -37,7 +37,7 @@ export const handler: Handler = async (event: APIGatewayEvent, context) => {
       tags.find((tag: any[]) => tag[0] === "category")?.[1] || undefined;
     await snsClient.send(
       new PublishCommand({
-        TopicArn: process.env.NOSTR_SNS_ARN,
+        TopicArn: process.env.NOSTR_EVENTS_SNS_ARN,
         Message: JSON.stringify({
           id,
           kind,
@@ -71,12 +71,4 @@ export const handler: Handler = async (event: APIGatewayEvent, context) => {
       body: JSON.stringify(["OK", id, false, e]),
     };
   }
-};
-
-const isPubkeyAllowed = (pubkey: string) => {
-  return true;
-};
-
-const isEventKindAllowed = (kind: number) => {
-  return true;
 };
