@@ -1,7 +1,7 @@
 import { SQSClient } from "@aws-sdk/client-sqs";
 
-const sqsClient = new SQSClient({
+const client = new SQSClient({
   region: "ap-northeast-1",
 });
 
-export default sqsClient;
+export default client;

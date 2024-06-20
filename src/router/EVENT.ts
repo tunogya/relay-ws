@@ -4,6 +4,15 @@ import { PublishCommand } from "@aws-sdk/client-sns";
 // @ts-ignore
 import { verifyEvent } from "nostr-tools/pure";
 
+/*
+ * From client to relay:
+ * ["EVENT", {id, kind, pubkey, created_at, content, tags, sig}]
+ *
+ * From relay to client:
+ * ["OK", <event_id>, <true|false>, <message>]
+ *
+ * message: duplicate, pow, blocked, rate-limited, invalid, and error
+ */
 export const handler: Handler = async (event: APIGatewayEvent, context) => {
   const messageArray = JSON.parse(
     // @ts-ignore
@@ -29,7 +38,7 @@ export const handler: Handler = async (event: APIGatewayEvent, context) => {
           "OK",
           id,
           false,
-          `Invalid: signature verification failed.`,
+          `invalid: signature verification failed.`,
         ]),
       };
     }
@@ -64,11 +73,10 @@ export const handler: Handler = async (event: APIGatewayEvent, context) => {
       body: JSON.stringify(["OK", id, true, `Event received successfully.`]),
     };
   } catch (e) {
-    console.log(e);
     return {
       statusCode: 200,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(["OK", id, false, e]),
+      body: JSON.stringify(["OK", id, false, `error: ${e}`]),
     };
   }
 };

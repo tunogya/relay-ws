@@ -25,6 +25,7 @@ provider:
       managedPolicies:
         - "arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess"
         - "arn:aws:iam::aws:policy/AmazonSNSFullAccess"
+        - "arn:aws:iam::aws:policy/AmazonAPIGatewayInvokeFullAccess"
 
 functions:
   persistence:

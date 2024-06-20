@@ -1,5 +1,5 @@
 import { Redis } from "@upstash/redis";
 
-const redisClient = Redis.fromEnv();
+const client = Redis.fromEnv();
 
-export default redisClient;
+export default client;
