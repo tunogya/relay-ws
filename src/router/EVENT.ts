@@ -1,44 +1,17 @@
 import { Handler, APIGatewayEvent } from "aws-lambda";
 import snsClient from "../utils/snsClient";
 import { PublishCommand } from "@aws-sdk/client-sns";
+// @ts-ignore
+import { verifyEvent } from "nostr-tools/pure";
 
 export const handler: Handler = async (event: APIGatewayEvent, context) => {
-  try {
-    const messageArray = JSON.parse(
-      // @ts-ignore
-      event.body,
-    );
+  const messageArray = JSON.parse(
     // @ts-ignore
-    const { id, kind, pubkey, created_at, content, tags, sig } =
-      messageArray[1];
-    // isPubkeyAllowed
-    if (!isPubkeyAllowed(pubkey)) {
-      return {
-        statusCode: 200,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify([
-          "OK",
-          id,
-          false,
-          "Denied. The pubkey is not allowed.",
-        ]),
-      };
-    }
-    // Check if the event kind is allowed
-    if (!isEventKindAllowed(kind)) {
-      return {
-        statusCode: 200,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify([
-          "OK",
-          id,
-          false,
-          `Denied. Event kind ${kind} is not allowed.`,
-        ]),
-      };
-    }
-
-    const { verifyEvent } = require("nostr-tools/pure");
+    event.body,
+  );
+  // @ts-ignore
+  const { id, kind, pubkey, created_at, content, tags, sig } = messageArray[1];
+  try {
     const isValid = verifyEvent({
       id,
       kind,
@@ -91,10 +64,11 @@ export const handler: Handler = async (event: APIGatewayEvent, context) => {
       body: JSON.stringify(["OK", id, true, `Event received successfully.`]),
     };
   } catch (e) {
+    console.log(e);
     return {
       statusCode: 200,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(["OK", null, false, `Something went wrong.`]),
+      body: JSON.stringify(["OK", id, false, e]),
     };
   }
 };
