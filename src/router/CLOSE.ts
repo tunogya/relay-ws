@@ -18,7 +18,7 @@ export const handler: Handler = async (event: APIGatewayEvent, context) => {
   );
   const subscription_id = messageArray?.[1];
   // pubkey = subscription_id;
-  // await redisClient.del(`p2cid:${subscription_id}`);
+  // await redisClient.del(`pubkey2conn:${subscription_id}`);
 
   return {
     statusCode: 200,

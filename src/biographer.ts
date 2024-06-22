@@ -111,7 +111,7 @@ Reply in the user's native language.
           }),
         ),
       ]);
-      const connectionId = await redisClient.get(`p2cid:${event.pubkey}`);
+      const connectionId = await redisClient.get(`pubkey2conn:${event.pubkey}`);
       if (connectionId) {
         try {
           await apiGatewayClient.send(

@@ -121,7 +121,7 @@ Use Jungian psychological theories, including the collective unconscious, archet
           }),
         ),
       ]);
-      const connectionId = await redisClient.get(`p2cid:${event.pubkey}`);
+      const connectionId = await redisClient.get(`pubkey2conn:${event.pubkey}`);
       if (connectionId) {
         try {
           await apiGatewayClient.send(

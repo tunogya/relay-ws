@@ -100,7 +100,7 @@ If no suitable texts are found, return an empty array.`;
       let kind1_events = [];
       let request_items = [];
 
-      const connectionId = await redisClient.get(`p2cid:${event.pubkey}`);
+      const connectionId = await redisClient.get(`pubkey2conn:${event.pubkey}`);
 
       for (let i = 0; i < data.length; i++) {
         const item = data[i];
