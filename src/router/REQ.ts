@@ -1,5 +1,4 @@
 import { Handler, APIGatewayEvent } from "aws-lambda";
-import redisClient from "../utils/redisClient";
 // @ts-ignore
 import { Filter } from "nostr-tools/filter";
 import { connectToDatabase } from "../utils/astradb";
@@ -11,7 +10,6 @@ import { verifyEvent } from "nostr-tools/pure";
 /*
  * From client to relay:
  * ["REQ", <subscription_id>, <filters1>, <filters2>, ...]
- * subscription_id = pubkey
  *
  * filtersX:
  * {
@@ -35,10 +33,10 @@ export const handler: Handler = async (event: APIGatewayEvent, context) => {
     event.body,
   );
   const subscription_id = messageArray?.[1];
-  // pubkey = subscription_id
-  await redisClient.set(`p2cid:${subscription_id}`, connectionId, {
-    ex: 24 * 60 * 60,
-  });
+  // // pubkey = subscription_id
+  // await redisClient.set(`p2cid:${subscription_id}`, connectionId, {
+  //   ex: 24 * 60 * 60,
+  // });
   const filters: Filter[] = messageArray?.slice(2) || [];
 
   const { db } = await connectToDatabase();

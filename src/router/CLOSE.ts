@@ -8,7 +8,6 @@ import redisClient from "../utils/redisClient";
  *
  * From relay to client:
  * ["CLOSED", <subscription_id>, <message>]
- * subscription_id = pubkey
  *
  * message: duplicate, pow, blocked, rate-limited, invalid, and error
  */
@@ -19,7 +18,7 @@ export const handler: Handler = async (event: APIGatewayEvent, context) => {
   );
   const subscription_id = messageArray?.[1];
   // pubkey = subscription_id;
-  await redisClient.del(`p2cid:${subscription_id}`);
+  // await redisClient.del(`p2cid:${subscription_id}`);
 
   return {
     statusCode: 200,
