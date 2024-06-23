@@ -1,5 +1,4 @@
 import { APIGatewayEvent, Handler } from "aws-lambda";
-import redisClient from "../utils/redisClient";
 
 /*
  * From client to relay:
@@ -17,8 +16,6 @@ export const handler: Handler = async (event: APIGatewayEvent, context) => {
     event.body,
   );
   const subscription_id = messageArray?.[1];
-  // pubkey = subscription_id;
-  // await redisClient.del(`pubkey2conn:${subscription_id}`);
 
   return {
     statusCode: 200,

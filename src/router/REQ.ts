@@ -33,12 +33,7 @@ export const handler: Handler = async (event: APIGatewayEvent, context) => {
     event.body,
   );
   const subscription_id = messageArray?.[1];
-  // // pubkey = subscription_id
-  // await redisClient.set(`p2cid:${subscription_id}`, connectionId, {
-  //   ex: 24 * 60 * 60,
-  // });
   const filters: Filter[] = messageArray?.slice(2) || [];
-
   const { db } = await connectToDatabase();
 
   const handleFiltersX = async (filter: Filter) => {
