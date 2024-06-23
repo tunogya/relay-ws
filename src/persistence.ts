@@ -1,6 +1,5 @@
 import { Handler, SNSEvent, SNSEventRecord } from "aws-lambda";
 import { connectToDatabase } from "./utils/astradb";
-import { convertTagsToDict } from "./utils/convertTagsToDict";
 import { ddbDocClient } from "./utils/ddbDocClient";
 import { DeleteCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
 // @ts-ignore
@@ -26,9 +25,6 @@ export const handler: Handler = async (event: SNSEvent, context) => {
         return;
       }
 
-      // parse tags to tags_map, for db query
-      const tags_map = convertTagsToDict(event.tags);
-
       let filter, update;
       if (event.kind === 0) {
         filter = { kind: 0, pubkey: event.pubkey };
@@ -39,11 +35,25 @@ export const handler: Handler = async (event: SNSEvent, context) => {
             tags: event.tags,
             sig: event.sig,
             created_at: event.created_at,
-            tags_map,
           },
         };
+        let tagsArray = [];
+        for (const tag of event.tags) {
+          const length = tag.length;
+          if (length < 2) {
+            continue;
+          }
+          const item: any = {
+            id: event.id,
+          };
+          for (let i = 0; i < length; i++) {
+            item[`tag${i}`] = tag[i];
+          }
+          tagsArray.push(item);
+        }
         await Promise.all([
           db.collection("events").updateOne(filter, update, { upsert: true }),
+          db.collection("tags").insertMany(tagsArray),
           ddbDocClient.send(
             new PutCommand({
               TableName: "events",
@@ -60,11 +70,25 @@ export const handler: Handler = async (event: SNSEvent, context) => {
             tags: event.tags,
             sig: event.sig,
             created_at: event.created_at,
-            tags_map,
           },
         };
+        let tagsArray = [];
+        for (const tag of event.tags) {
+          const length = tag.length;
+          if (length < 2) {
+            continue;
+          }
+          const item: any = {
+            id: event.id,
+          };
+          for (let i = 0; i < length; i++) {
+            item[`tag${i}`] = tag[i];
+          }
+          tagsArray.push(item);
+        }
         await Promise.all([
           db.collection("events").updateOne(filter, update, { upsert: true }),
+          db.collection("tags").insertMany(tagsArray),
           ddbDocClient.send(
             new PutCommand({
               TableName: "events",

@@ -2,7 +2,6 @@ import { Handler, SNSEvent, SNSEventRecord } from "aws-lambda";
 import { connectToDatabase } from "./utils/astradb";
 import openai from "./utils/openai";
 import { generateSecretKey } from "./utils/generateSecretKey";
-import { convertTagsToDict } from "./utils/convertTagsToDict";
 import { ddbDocClient } from "./utils/ddbDocClient";
 import { BatchWriteCommand } from "@aws-sdk/lib-dynamodb";
 import { newUserInfo } from "./utils/newUserInfo";
@@ -97,8 +96,9 @@ If no suitable texts are found, return an empty array.`;
 
       const data = JSON.parse(reply)?.data || [];
 
-      let kind1_events = [];
-      let request_items = [];
+      const kind1_events = [];
+      const tags_array = [];
+      const request_items = [];
 
       const connectionId = await redisClient.get(`pubkey2conn:${event.pubkey}`);
 
@@ -137,13 +137,21 @@ If no suitable texts are found, return an empty array.`;
             Item: comment_event,
           },
         });
-        kind1_events.push({
-          ...comment_event,
-          tags_map: convertTagsToDict(tags),
+        kind1_events.push(comment_event);
+        tags_array.push({
+          id: comment_event.id,
+          tag0: "e",
+          tag1: event.id,
+        });
+        tags_array.push({
+          id: comment_event.id,
+          tag0: "p",
+          tag1: event.pubkey,
         });
       }
       await Promise.all([
         db.collection("events").insertMany(kind1_events),
+        db.collection("tags").insertMany(tags_array),
         ddbDocClient.send(
           new BatchWriteCommand({
             RequestItems: {

@@ -2,7 +2,6 @@ import { Handler, SNSEvent, SNSEventRecord } from "aws-lambda";
 import { connectToDatabase } from "./utils/astradb";
 import openai from "./utils/openai";
 import { generateSecretKey } from "./utils/generateSecretKey";
-import { convertTagsToDict } from "./utils/convertTagsToDict";
 import { ddbDocClient } from "./utils/ddbDocClient";
 import { PutCommand } from "@aws-sdk/lib-dynamodb";
 import { newUserInfo } from "./utils/newUserInfo";
@@ -99,7 +98,8 @@ Use Jungian psychological theories, including the collective unconscious, archet
         ["e", event.id],
         ["p", event.pubkey],
       ];
-      const eventComment = finalizeEvent(
+      const tags_array = [];
+      const comment_event = finalizeEvent(
         {
           kind: 1,
           created_at: Math.floor(Date.now() / 1000),
@@ -108,16 +108,23 @@ Use Jungian psychological theories, including the collective unconscious, archet
         },
         userSk,
       );
-
+      tags_array.push({
+        id: comment_event.id,
+        tag0: "e",
+        tag1: event.id,
+      });
+      tags_array.push({
+        id: comment_event.id,
+        tag0: "p",
+        tag1: event.pubkey,
+      });
       await Promise.all([
-        db.collection("events").insertOne({
-          ...eventComment,
-          tags_map: convertTagsToDict(tags),
-        }),
+        db.collection("events").insertOne(comment_event),
+        db.collection("tags").insertMany(tags_array),
         ddbDocClient.send(
           new PutCommand({
             TableName: "events",
-            Item: eventComment,
+            Item: comment_event,
           }),
         ),
       ]);
