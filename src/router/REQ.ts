@@ -53,6 +53,12 @@ export const handler: Handler = async (event: APIGatewayEvent, context) => {
     if (kinds && kinds.length > 0) {
       query.kind = { $in: kinds };
     }
+    if (filter?.["#p"] && filter["#p"].length > 0) {
+      query["tags_map.p.0"] = filter["#p"][0];
+    }
+    if (filter?.["#e"] && filter["#e"].length > 0) {
+      query["tags_map.e.0"] = filter["#e"][0];
+    }
     if (since) {
       query.created_at = { $gte: since };
     }
