@@ -10,6 +10,7 @@ import apiGatewayClient from "./utils/apiGatewayClient";
 import { PostToConnectionCommand } from "@aws-sdk/client-apigatewaymanagementapi";
 // @ts-ignore
 import { getPublicKey, finalizeEvent, verifyEvent } from "nostr-tools/pure";
+import { parseEventTags } from "./utils/parseTags";
 
 /**
  * biographer
@@ -88,6 +89,7 @@ Reply in the user's native language.
       const tags = [
         ["e", event.id],
         ["p", event.pubkey],
+        ["alt", "reply"],
       ];
       const comment_event = finalizeEvent(
         {
@@ -98,17 +100,7 @@ Reply in the user's native language.
         },
         userSk,
       );
-      const tags_array = [];
-      tags_array.push({
-        id: comment_event.id,
-        tag0: "e",
-        tag1: event.id,
-      });
-      tags_array.push({
-        id: comment_event.id,
-        tag0: "p",
-        tag1: event.pubkey,
-      });
+      const tags_array = parseEventTags(comment_event);
       await Promise.all([
         db.collection("events").insertOne(comment_event),
         db.collection("tags").insertMany(tags_array),

@@ -10,6 +10,7 @@ import apiGatewayClient from "./utils/apiGatewayClient";
 import { PostToConnectionCommand } from "@aws-sdk/client-apigatewaymanagementapi";
 // @ts-ignore
 import { verifyEvent } from "nostr-tools/pure";
+import { parseEventTags } from "./utils/parseTags";
 
 /**
  * subconscious
@@ -97,8 +98,8 @@ Use Jungian psychological theories, including the collective unconscious, archet
       const tags = [
         ["e", event.id],
         ["p", event.pubkey],
+        ["alt", "reply"],
       ];
-      const tags_array = [];
       const comment_event = finalizeEvent(
         {
           kind: 1,
@@ -108,16 +109,7 @@ Use Jungian psychological theories, including the collective unconscious, archet
         },
         userSk,
       );
-      tags_array.push({
-        id: comment_event.id,
-        tag0: "e",
-        tag1: event.id,
-      });
-      tags_array.push({
-        id: comment_event.id,
-        tag0: "p",
-        tag1: event.pubkey,
-      });
+      const tags_array = parseEventTags(comment_event);
       await Promise.all([
         db.collection("events").insertOne(comment_event),
         db.collection("tags").insertMany(tags_array),

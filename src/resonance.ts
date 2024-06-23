@@ -10,6 +10,7 @@ import apiGatewayClient from "./utils/apiGatewayClient";
 import { PostToConnectionCommand } from "@aws-sdk/client-apigatewaymanagementapi";
 // @ts-ignore
 import { getPublicKey, finalizeEvent, verifyEvent } from "nostr-tools/pure";
+import { parseEventTags } from "./utils/parseTags";
 
 /**
  * resonance
@@ -97,7 +98,7 @@ If no suitable texts are found, return an empty array.`;
       const data = JSON.parse(reply)?.data || [];
 
       const kind1_events = [];
-      const tags_array = [];
+      let tags_array = [];
       const request_items = [];
 
       const connectionId = await redisClient.get(`pubkey2conn:${event.pubkey}`);
@@ -122,6 +123,7 @@ If no suitable texts are found, return an empty array.`;
         const tags = [
           ["e", event.id],
           ["p", event.pubkey],
+          ["alt", "reply"],
         ];
         const comment_event = finalizeEvent(
           {
@@ -138,16 +140,10 @@ If no suitable texts are found, return an empty array.`;
           },
         });
         kind1_events.push(comment_event);
-        tags_array.push({
-          id: comment_event.id,
-          tag0: "e",
-          tag1: event.id,
-        });
-        tags_array.push({
-          id: comment_event.id,
-          tag0: "p",
-          tag1: event.pubkey,
-        });
+
+        for (const tag of parseEventTags(comment_event)) {
+          tags_array.push(tag);
+        }
       }
       await Promise.all([
         db.collection("events").insertMany(kind1_events),

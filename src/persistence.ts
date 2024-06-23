@@ -4,6 +4,7 @@ import { ddbDocClient } from "./utils/ddbDocClient";
 import { DeleteCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
 // @ts-ignore
 import { verifyEvent } from "nostr-tools/pure";
+import { parseEventTags } from "./utils/parseTags";
 
 /**
  * persistence
@@ -72,23 +73,10 @@ export const handler: Handler = async (event: SNSEvent, context) => {
             created_at: event.created_at,
           },
         };
-        let tagsArray = [];
-        for (const tag of event.tags) {
-          const length = tag.length;
-          if (length < 2) {
-            continue;
-          }
-          const item: any = {
-            id: event.id,
-          };
-          for (let i = 0; i < length; i++) {
-            item[`tag${i}`] = tag[i];
-          }
-          tagsArray.push(item);
-        }
+        const tags_array = parseEventTags(event);
         await Promise.all([
           db.collection("events").updateOne(filter, update, { upsert: true }),
-          db.collection("tags").insertMany(tagsArray),
+          db.collection("tags").insertMany(tags_array),
           ddbDocClient.send(
             new PutCommand({
               TableName: "events",
