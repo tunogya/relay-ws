@@ -49,10 +49,34 @@ export const handler: Handler = async (event: APIGatewayEvent, context) => {
       query.kind = { $in: kinds };
     }
     if (filter?.["#p"] && filter["#p"].length > 0) {
-      query["tags_map.p.0"] = filter["#p"][0];
+      const p_list = filter["#p"];
+      const results = await db
+        .collection("tags")
+        .find({
+          tag0: "p",
+          tag1: { $in: p_list },
+        })
+        .toArray();
+      const ids = results.map((result) => result.id);
+      query.id = {
+        ...query.id,
+        $in: ids,
+      };
     }
     if (filter?.["#e"] && filter["#e"].length > 0) {
-      query["tags_map.e.0"] = filter["#e"][0];
+      const e_list = filter["#e"];
+      const results = await db
+        .collection("tags")
+        .find({
+          tag0: "e",
+          tag1: { $in: e_list },
+        })
+        .toArray();
+      const ids = results.map((result) => result.id);
+      query.id = {
+        ...query.id,
+        $in: ids,
+      };
     }
     if (since) {
       query.created_at = { $gte: since };
