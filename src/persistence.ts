@@ -2,7 +2,7 @@ import { Handler, SNSEvent, SNSEventRecord } from "aws-lambda";
 import { connectToDatabase } from "./utils/astradb";
 import { convertTagsToDict } from "./utils/convertTagsToDict";
 import { ddbDocClient } from "./utils/ddbDocClient";
-import { PutCommand } from "@aws-sdk/lib-dynamodb";
+import { DeleteCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
 // @ts-ignore
 import { verifyEvent } from "nostr-tools/pure";
 
@@ -42,6 +42,15 @@ export const handler: Handler = async (event: SNSEvent, context) => {
             tags_map,
           },
         };
+        await Promise.all([
+          db.collection("events").updateOne(filter, update, { upsert: true }),
+          ddbDocClient.send(
+            new PutCommand({
+              TableName: "events",
+              Item: event,
+            }),
+          ),
+        ]);
       } else if (event.kind === 1) {
         filter = { kind: 1, id: event.id };
         update = {
@@ -54,9 +63,6 @@ export const handler: Handler = async (event: SNSEvent, context) => {
             tags_map,
           },
         };
-      }
-
-      if (filter && update) {
         await Promise.all([
           db.collection("events").updateOne(filter, update, { upsert: true }),
           ddbDocClient.send(
@@ -66,6 +72,22 @@ export const handler: Handler = async (event: SNSEvent, context) => {
             }),
           ),
         ]);
+      } else if (event.kind === 5) {
+        const tags = event.tags;
+        const ids = tags.map((item) => item[1]);
+        for (const id of ids) {
+          await Promise.all([
+            db.collection("events").deleteOne({ id: id }),
+            ddbDocClient.send(
+              new DeleteCommand({
+                TableName: "events",
+                Key: {
+                  id: id,
+                },
+              }),
+            ),
+          ]);
+        }
       }
     } catch (_) {
       throw new Error("Intentional failure to trigger DLQ");
@@ -76,7 +98,8 @@ export const handler: Handler = async (event: SNSEvent, context) => {
 
   console.log(`Successfully processed ${records.length} records.`);
   return {
-    success: true,
-    count: records.length,
+    statusCode: 200,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ success: true }),
   };
 };

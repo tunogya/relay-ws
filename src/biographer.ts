@@ -134,7 +134,8 @@ Reply in the user's native language.
 
   console.log(`Successfully processed ${records.length} records.`);
   return {
-    success: true,
-    count: records.length,
+    statusCode: 200,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ success: true }),
   };
 };
