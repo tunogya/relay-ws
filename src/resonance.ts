@@ -34,10 +34,10 @@ export const handler: Handler = async (event: SNSEvent, context) => {
         return;
       }
 
-      // must be origin post
-      const e1 =
-        event.tags.find((tag: any[]) => tag?.[0] === "e")?.[1] || undefined;
-      if (e1) {
+      const category =
+        event.tags.find((tag: any[]) => tag?.[0] === "category")?.[1] ||
+        undefined;
+      if (category !== "reflections") {
         return;
       }
 
