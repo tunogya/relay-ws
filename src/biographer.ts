@@ -120,6 +120,7 @@ Reply in the user's native language.
               Data: JSON.stringify(["EVENT", event.id, comment_event]),
             }),
           );
+          console.log("Successfully sent message to connection", connectionId);
         } catch (e) {
           console.log(e);
         }

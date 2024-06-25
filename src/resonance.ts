@@ -142,6 +142,10 @@ If no suitable texts are found, return an empty array.`;
                 Data: JSON.stringify(["EVENT", event.id, comment_event]),
               }),
             );
+            console.log(
+              "Successfully sent message to connection",
+              connectionId,
+            );
           } catch (e) {
             console.log(e);
           }

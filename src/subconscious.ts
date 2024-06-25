@@ -129,6 +129,7 @@ Use Jungian psychological theories, including the collective unconscious, archet
               Data: JSON.stringify(["EVENT", event.id, comment_event]),
             }),
           );
+          console.log("Successfully sent message to connection", connectionId);
         } catch (e) {
           console.log(e);
         }
