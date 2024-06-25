@@ -8,9 +8,7 @@ export const handler: Handler = async (event: APIGatewayEvent, context) => {
       statusCode: 401,
     };
   }
-  authorization = Buffer.from(authorization.split("Basic ")[1]).toString(
-    "base64",
-  );
+  authorization = atob(authorization.replace("Basic ", ""));
   const pubkey = authorization.split(":")[0];
   const connectionId = event.requestContext.connectionId;
   await redisClient
