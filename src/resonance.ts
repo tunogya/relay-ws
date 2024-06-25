@@ -134,13 +134,24 @@ If no suitable texts are found, return an empty array.`;
           },
           userSk,
         );
+        if (connectionId) {
+          try {
+            await apiGatewayClient.send(
+              new PostToConnectionCommand({
+                ConnectionId: `${connectionId}`,
+                Data: JSON.stringify(["EVENT", event.id, comment_event]),
+              }),
+            );
+          } catch (e) {
+            console.log(e);
+          }
+        }
         request_items.push({
           PutRequest: {
             Item: comment_event,
           },
         });
         kind1_events.push(comment_event);
-
         for (const tag of parseEventTags(comment_event)) {
           tags_array.push(tag);
         }
@@ -156,18 +167,6 @@ If no suitable texts are found, return an empty array.`;
           }),
         ),
       ]);
-      if (connectionId) {
-        try {
-          await apiGatewayClient.send(
-            new PostToConnectionCommand({
-              ConnectionId: `${connectionId}`,
-              Data: JSON.stringify(["EVENT", event.pubkey, event]),
-            }),
-          );
-        } catch (e) {
-          console.log(e);
-        }
-      }
     } catch (_) {
       throw new Error("Intentional failure to trigger DLQ");
     }

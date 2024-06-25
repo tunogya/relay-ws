@@ -126,7 +126,7 @@ Use Jungian psychological theories, including the collective unconscious, archet
           await apiGatewayClient.send(
             new PostToConnectionCommand({
               ConnectionId: `${connectionId}`,
-              Data: JSON.stringify(["EVENT", event.pubkey, event]),
+              Data: JSON.stringify(["EVENT", event.id, comment_event]),
             }),
           );
         } catch (e) {
