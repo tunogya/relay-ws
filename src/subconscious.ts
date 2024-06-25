@@ -26,25 +26,25 @@ export const handler: Handler = async (event: SNSEvent, context) => {
 
   const processRecord = async (record: SNSEventRecord) => {
     try {
-      const event = JSON.parse(record.Sns.Message);
-      const isValid = verifyEvent(event);
+      const _event = JSON.parse(record.Sns.Message);
+      const isValid = verifyEvent(_event);
 
       if (!isValid) {
         return;
       }
 
-      if (event.kind !== 1) {
+      if (_event.kind !== 1) {
         return;
       }
 
       const category =
-        event.tags.find((tag: any[]) => tag?.[0] === "category")?.[1] ||
+        _event.tags.find((tag: any[]) => tag?.[0] === "category")?.[1] ||
         undefined;
       if (category !== "dreams") {
         return;
       }
 
-      const pubkey = event.pubkey;
+      const pubkey = _event.pubkey;
 
       const prompt = `You are dream analyst Carl Jung, a pioneer in the field of psychology, specializing in the analysis of dreams and the symbols of the unconscious. Ask the user to describe their dream in detail, including the following aspects:
 
@@ -65,7 +65,7 @@ Use Jungian psychological theories, including the collective unconscious, archet
           },
           {
             role: "user",
-            content: event.content,
+            content: _event.content,
           },
         ],
         model: "gpt-4o",
@@ -96,8 +96,8 @@ Use Jungian psychological theories, including the collective unconscious, archet
       }
 
       const tags = [
-        ["e", event.id],
-        ["p", event.pubkey],
+        ["e", _event.id],
+        ["p", _event.pubkey],
         ["alt", "reply"],
       ];
       const comment_event = finalizeEvent(
@@ -120,13 +120,15 @@ Use Jungian psychological theories, including the collective unconscious, archet
           }),
         ),
       ]);
-      const connectionId = await redisClient.get(`pubkey2conn:${event.pubkey}`);
+      const connectionId = await redisClient.get(
+        `pubkey2conn:${_event.pubkey}`,
+      );
       if (connectionId) {
         try {
           await apiGatewayClient.send(
             new PostToConnectionCommand({
               ConnectionId: `${connectionId}`,
-              Data: JSON.stringify(["EVENT", event.id, comment_event]),
+              Data: JSON.stringify(["EVENT", _event.id, comment_event]),
             }),
           );
           console.log("Successfully sent message to connection", connectionId);

@@ -15,7 +15,6 @@ export const handler: Handler = async (event: APIGatewayEvent, context) => {
   const connectionId = event.requestContext.connectionId;
   await redisClient
     .pipeline()
-    .incr("ws:connected")
     .set(`conn2pubkey:${connectionId}`, pubkey, {
       ex: 24 * 60 * 60,
     })

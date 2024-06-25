@@ -23,25 +23,25 @@ export const handler: Handler = async (event: SNSEvent, context) => {
 
   const processRecord = async (record: SNSEventRecord) => {
     try {
-      const event = JSON.parse(record.Sns.Message);
-      const isValid = verifyEvent(event);
+      const _event = JSON.parse(record.Sns.Message);
+      const isValid = verifyEvent(_event);
 
       if (!isValid) {
         return;
       }
 
-      if (event.kind !== 1) {
+      if (_event.kind !== 1) {
         return;
       }
 
       const category =
-        event.tags.find((tag: any[]) => tag?.[0] === "category")?.[1] ||
+        _event.tags.find((tag: any[]) => tag?.[0] === "category")?.[1] ||
         undefined;
       if (category !== "reflections") {
         return;
       }
 
-      const pubkey = event.pubkey;
+      const pubkey = _event.pubkey;
 
       const prompt = `#### User Requirement Description:
 The user will write a reflection on their memories, dreams, or thoughts. Your task is to:
@@ -76,7 +76,7 @@ If no suitable texts are found, return an empty array.`;
           },
           {
             role: "user",
-            content: event.content,
+            content: _event.content,
           },
         ],
         model: "gpt-4o",
@@ -101,7 +101,9 @@ If no suitable texts are found, return an empty array.`;
       let tags_array = [];
       const request_items = [];
 
-      const connectionId = await redisClient.get(`pubkey2conn:${event.pubkey}`);
+      const connectionId = await redisClient.get(
+        `pubkey2conn:${_event.pubkey}`,
+      );
 
       for (let i = 0; i < data.length; i++) {
         const item = data[i];
@@ -121,8 +123,8 @@ If no suitable texts are found, return an empty array.`;
         }
 
         const tags = [
-          ["e", event.id],
-          ["p", event.pubkey],
+          ["e", _event.id],
+          ["p", _event.pubkey],
           ["alt", "reply"],
         ];
         const comment_event = finalizeEvent(
@@ -139,7 +141,7 @@ If no suitable texts are found, return an empty array.`;
             await apiGatewayClient.send(
               new PostToConnectionCommand({
                 ConnectionId: `${connectionId}`,
-                Data: JSON.stringify(["EVENT", event.id, comment_event]),
+                Data: JSON.stringify(["EVENT", _event.id, comment_event]),
               }),
             );
             console.log(

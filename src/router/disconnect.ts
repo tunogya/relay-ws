@@ -7,7 +7,6 @@ export const handler: Handler = async (event: APIGatewayEvent, context) => {
     const pubkey = await redisClient.get(`conn2pubkey:${connectionId}`);
     await redisClient
       .pipeline()
-      .decr("ws:connected")
       .del(`pubkey2conn:${pubkey}`)
       .del(`conn2pubkey:${connectionId}`)
       .exec();

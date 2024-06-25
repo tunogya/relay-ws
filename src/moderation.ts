@@ -15,30 +15,30 @@ export const handler: Handler = async (event: SNSEvent, context) => {
 
   const processRecord = async (record: SNSEventRecord) => {
     try {
-      const event = JSON.parse(record.Sns.Message);
-      const isValid = verifyEvent(event);
+      const _event = JSON.parse(record.Sns.Message);
+      const isValid = verifyEvent(_event);
 
       if (!isValid) {
         return;
       }
 
-      if (event.kind !== 1) {
+      if (_event.kind !== 1) {
         return;
       }
 
-      if (!event.content) {
+      if (!_event.content) {
         return;
       }
 
       const moderation = await openai.moderations.create({
-        input: event.content,
+        input: _event.content,
       });
       const possibly_sensitive = moderation.results[0].flagged;
 
       await db
         .collection("events")
         .updateOne(
-          { id: event.id },
+          { id: _event.id },
           { $set: { possibly_sensitive } },
           { upsert: true },
         );

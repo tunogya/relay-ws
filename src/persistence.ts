@@ -19,33 +19,33 @@ export const handler: Handler = async (event: SNSEvent, context) => {
 
   const processRecord = async (record: SNSEventRecord) => {
     try {
-      const event = JSON.parse(record.Sns.Message);
-      const isValid = verifyEvent(event);
+      const _event = JSON.parse(record.Sns.Message);
+      const isValid = verifyEvent(_event);
 
       if (!isValid) {
         return;
       }
 
       let filter, update;
-      if (event.kind === 0) {
-        filter = { kind: 0, pubkey: event.pubkey };
+      if (_event.kind === 0) {
+        filter = { kind: 0, pubkey: _event.pubkey };
         update = {
           $set: {
-            id: event.id,
-            content: event.content,
-            tags: event.tags,
-            sig: event.sig,
-            created_at: event.created_at,
+            id: _event.id,
+            content: _event.content,
+            tags: _event.tags,
+            sig: _event.sig,
+            created_at: _event.created_at,
           },
         };
         let tagsArray = [];
-        for (const tag of event.tags) {
+        for (const tag of _event.tags) {
           const length = tag.length;
           if (length < 2) {
             continue;
           }
           const item: any = {
-            id: event.id,
+            id: _event.id,
           };
           for (let i = 0; i < length; i++) {
             item[`tag${i}`] = tag[i];
@@ -58,34 +58,34 @@ export const handler: Handler = async (event: SNSEvent, context) => {
           ddbDocClient.send(
             new PutCommand({
               TableName: "events",
-              Item: event,
+              Item: _event,
             }),
           ),
         ]);
-      } else if (event.kind === 1) {
-        filter = { kind: 1, id: event.id };
+      } else if (_event.kind === 1) {
+        filter = { kind: 1, id: _event.id };
         update = {
           $set: {
-            pubkey: event.pubkey,
-            content: event.content,
-            tags: event.tags,
-            sig: event.sig,
-            created_at: event.created_at,
+            pubkey: _event.pubkey,
+            content: _event.content,
+            tags: _event.tags,
+            sig: _event.sig,
+            created_at: _event.created_at,
           },
         };
-        const tags_array = parseEventTags(event);
+        const tags_array = parseEventTags(_event);
         await Promise.all([
           db.collection("events").updateOne(filter, update, { upsert: true }),
           db.collection("tags").insertMany(tags_array),
           ddbDocClient.send(
             new PutCommand({
               TableName: "events",
-              Item: event,
+              Item: _event,
             }),
           ),
         ]);
-      } else if (event.kind === 5) {
-        const tags = event.tags;
+      } else if (_event.kind === 5) {
+        const tags = _event.tags;
         const ids = tags.map((item) => item[1]);
         for (const id of ids) {
           await Promise.all([

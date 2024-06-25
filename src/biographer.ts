@@ -23,25 +23,25 @@ export const handler: Handler = async (event: SNSEvent, context) => {
 
   const processRecord = async (record: SNSEventRecord) => {
     try {
-      const event = JSON.parse(record.Sns.Message);
-      const isValid = verifyEvent(event);
+      const _event = JSON.parse(record.Sns.Message);
+      const isValid = verifyEvent(_event);
 
       if (!isValid) {
         return;
       }
 
-      if (event.kind !== 1) {
+      if (_event.kind !== 1) {
         return;
       }
 
       const category =
-        event.tags.find((tag: any[]) => tag?.[0] === "category")?.[1] ||
+        _event.tags.find((tag: any[]) => tag?.[0] === "category")?.[1] ||
         undefined;
       if (category !== "memories") {
         return;
       }
 
-      const pubkey = event.pubkey;
+      const pubkey = _event.pubkey;
 
       const prompt = `Please write a memoir in the style of Zweig, based on the memories I provide. Use your pen to narrate the ups and downs of my life, as if writing a biography in the spirit of Zweig. Let the words be like delicate brushstrokes, depicting the emotions and thoughts deep within me. Allow the readers to feel as if they are immersed in my extraordinary life journey.
 
@@ -56,7 +56,7 @@ Reply in the user's native language.
           },
           {
             role: "user",
-            content: event.content,
+            content: _event.content,
           },
         ],
         model: "gpt-4o",
@@ -87,8 +87,8 @@ Reply in the user's native language.
       }
 
       const tags = [
-        ["e", event.id],
-        ["p", event.pubkey],
+        ["e", _event.id],
+        ["p", _event.pubkey],
         ["alt", "reply"],
       ];
       const comment_event = finalizeEvent(
@@ -111,13 +111,15 @@ Reply in the user's native language.
           }),
         ),
       ]);
-      const connectionId = await redisClient.get(`pubkey2conn:${event.pubkey}`);
+      const connectionId = await redisClient.get(
+        `pubkey2conn:${_event.pubkey}`,
+      );
       if (connectionId) {
         try {
           await apiGatewayClient.send(
             new PostToConnectionCommand({
               ConnectionId: `${connectionId}`,
-              Data: JSON.stringify(["EVENT", event.id, comment_event]),
+              Data: JSON.stringify(["EVENT", _event.id, comment_event]),
             }),
           );
           console.log("Successfully sent message to connection", connectionId);
