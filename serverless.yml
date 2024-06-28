@@ -66,6 +66,20 @@ functions:
           filterPolicy:
             kind:
               - 1
+  contentDetail:
+    name: "nostr-contentDetail"
+    handler: "src/contentDetail.handler"
+    timeout: 30
+    memorySize: 256
+    architecture: arm64
+    maximumRetryAttempts: 1
+    events:
+      - sns:
+          arn: ${env:NOSTR_EVENTS_SNS_ARN}
+          filterPolicyScope: MessageAttributes
+          filterPolicy:
+            kind:
+              - 1
   subconscious:
     name: "nostr-subconscious"
     handler: "src/subconscious.handler"
