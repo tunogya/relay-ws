@@ -43,7 +43,7 @@ export const handler: Handler = async (event: SNSEvent, context) => {
             content: _event.content,
           },
         ],
-        model: "gpt-4o",
+        model: "gpt-3.5-turbo",
         temperature: 0.2,
         user: _event.pubkey,
         response_format: {
