@@ -2,7 +2,6 @@ import { APIGatewayEvent, Handler } from "aws-lambda";
 import redisClient from "../utils/redisClient";
 
 export const handler: Handler = async (event: APIGatewayEvent, context) => {
-  console.log(event);
   const pubkey = event?.queryStringParameters?.pubkey;
   const connectionId = event.requestContext.connectionId;
   if (pubkey) {
