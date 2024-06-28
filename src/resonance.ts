@@ -81,7 +81,7 @@ If no suitable texts are found, return an empty array.`;
         ],
         model: "gpt-4o",
         stream: false,
-        temperature: 0.5,
+        temperature: 0.8,
         max_tokens: 4096,
         response_format: {
           type: "json_object",
