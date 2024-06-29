@@ -2,7 +2,7 @@
 
 This is a nostr serverless relay, written in TypeScript. It currently supports the entire relay protocol, and persists data with AstraDB and DynamoDB.
 
-## Features
+## Nostr Protocol Support
 
 [nostr-protocol NIPs](https://github.com/nostr-protocol/nips/tree/master)
 
@@ -22,3 +22,9 @@ This is a nostr serverless relay, written in TypeScript. It currently supports t
 - [ ] NIP-33: Parameterized Replaceable Events
 - [ ] NIP-40: Expiration Timestamp
 - [ ] NIP-42: Authentication of clients to relays
+
+## Tripiz Support
+
+- [x] Memories: Zweig
+- [x] Dreams: Carl Jung
+- [x] Reflections
