@@ -90,6 +90,12 @@ export const handler: Handler = async (event: SNSEvent, context) => {
         for (const id of ids) {
           await Promise.all([
             db.collection("events").deleteOne({ id: id }),
+            db.collection("tags").deleteMany({
+              id: id,
+            }),
+            db.collection("contents").deleteMany({
+              id: id,
+            }),
             ddbDocClient.send(
               new DeleteCommand({
                 TableName: "events",
