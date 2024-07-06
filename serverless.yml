@@ -29,8 +29,8 @@ provider:
 
 functions:
   persistence:
-    name: "nostr-persistence"
-    handler: "src/persistence.handler"
+    name: "persistence"
+    handler: "src/subscriber/persistence.handler"
     timeout: 6
     memorySize: 256
     architecture: arm64
@@ -39,8 +39,8 @@ functions:
       - sns:
           arn: ${env:NOSTR_EVENTS_SNS_ARN}
   moderation:
-    name: "nostr-moderation"
-    handler: "src/moderation.handler"
+    name: "moderation"
+    handler: "src/subscriber/moderation.handler"
     timeout: 6
     memorySize: 256
     architecture: arm64
@@ -53,8 +53,8 @@ functions:
             kind:
               - 1
   embeddings:
-    name: "nostr-embeddings"
-    handler: "src/embeddings.handler"
+    name: "embeddings"
+    handler: "src/subscriber/embeddings.handler"
     timeout: 6
     memorySize: 256
     architecture: arm64
@@ -66,9 +66,9 @@ functions:
           filterPolicy:
             kind:
               - 1
-  contentDetail:
-    name: "nostr-contentDetail"
-    handler: "src/contentDetail.handler"
+  xray_content:
+    name: "xray_content"
+    handler: "src/subscriber/xray_content.handler"
     timeout: 30
     memorySize: 256
     architecture: arm64
@@ -80,9 +80,9 @@ functions:
           filterPolicy:
             kind:
               - 1
-  subconscious:
-    name: "nostr-subconscious"
-    handler: "src/subconscious.handler"
+  discuss_dreams:
+    name: "discuss_dreams"
+    handler: "src/subscriber/discuss_dreams.handler"
     timeout: 30
     memorySize: 256
     architecture: arm64
@@ -96,9 +96,9 @@ functions:
               - 1
             category:
               - dreams
-  biographer:
-    name: "nostr-biographer"
-    handler: "src/biographer.handler"
+  discuss_memories:
+    name: "discuss_memories"
+    handler: "src/subscriber/discuss_memories.handler"
     timeout: 30
     memorySize: 256
     architecture: arm64
@@ -112,9 +112,9 @@ functions:
               - 1
             category:
               - memories
-  resonance:
-    name: "nostr-resonance"
-    handler: "src/resonance.handler"
+  discuss_reflections:
+    name: "discuss_reflections"
+    handler: "src/subscriber/discuss_reflections.handler"
     timeout: 30
     memorySize: 256
     architecture: arm64

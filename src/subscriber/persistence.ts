@@ -1,10 +1,10 @@
 import { Handler, SNSEvent, SNSEventRecord } from "aws-lambda";
-import { connectToDatabase } from "./utils/astradb";
-import { ddbDocClient } from "./utils/ddbDocClient";
+import { connectToDatabase } from "../utils/astradb";
+import { ddbDocClient } from "../utils/ddbDocClient";
 import { DeleteCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
 // @ts-ignore
 import { verifyEvent } from "nostr-tools/pure";
-import { parseEventTags } from "./utils/parseTags";
+import { parseEventTags } from "../utils/parseTags";
 
 /**
  * persistence

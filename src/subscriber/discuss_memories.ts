@@ -1,19 +1,19 @@
 import { Handler, SNSEvent, SNSEventRecord } from "aws-lambda";
-import { connectToDatabase } from "./utils/astradb";
-import openai from "./utils/openai";
-import { generateSecretKey } from "./utils/generateSecretKey";
-import { ddbDocClient } from "./utils/ddbDocClient";
+import { connectToDatabase } from "../utils/astradb";
+import openai from "../utils/openai";
+import { generateSecretKey } from "../utils/generateSecretKey";
+import { ddbDocClient } from "../utils/ddbDocClient";
 import { PutCommand } from "@aws-sdk/lib-dynamodb";
-import { newUserInfo } from "./utils/newUserInfo";
-import redisClient from "./utils/redisClient";
-import apiGatewayClient from "./utils/apiGatewayClient";
+import { newUserInfo } from "../utils/newUserInfo";
+import redisClient from "../utils/redisClient";
+import apiGatewayClient from "../utils/apiGatewayClient";
 import { PostToConnectionCommand } from "@aws-sdk/client-apigatewaymanagementapi";
 // @ts-ignore
 import { getPublicKey, finalizeEvent, verifyEvent } from "nostr-tools/pure";
-import { parseEventTags } from "./utils/parseTags";
+import { parseEventTags } from "../utils/parseTags";
 
 /**
- * biographer
+ * discuss memories
  * only listen kind = 1, and category = memories
  */
 export const handler: Handler = async (event: SNSEvent, context) => {

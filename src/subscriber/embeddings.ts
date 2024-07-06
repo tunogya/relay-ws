@@ -1,6 +1,6 @@
 import { Handler, SNSEvent, SNSEventRecord } from "aws-lambda";
-import { connectToDatabase } from "./utils/astradb";
-import openai from "./utils/openai";
+import { connectToDatabase } from "../utils/astradb";
+import openai from "../utils/openai";
 // @ts-ignore
 import { verifyEvent } from "nostr-tools/pure";
 
