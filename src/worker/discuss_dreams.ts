@@ -97,7 +97,7 @@ Use Jungian psychological theories, including the collective unconscious, archet
         userSk,
       );
 
-      await snsClient.send(
+      const result = await snsClient.send(
         new PublishCommand({
           TopicArn: process.env.NOSTR_EVENTS_SNS_ARN,
           Message: JSON.stringify(comment_event),
@@ -113,6 +113,10 @@ Use Jungian psychological theories, including the collective unconscious, archet
           },
         }),
       );
+
+      if (!result.MessageId) {
+        console.log("Error: SNS");
+      }
     } catch (e) {
       console.log(e);
       throw new Error("Intentional failure to trigger DLQ");

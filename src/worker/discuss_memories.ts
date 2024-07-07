@@ -90,7 +90,7 @@ Reply in the user's native language.
         userSk,
       );
 
-      await snsClient.send(
+      const result = await snsClient.send(
         new PublishCommand({
           TopicArn: process.env.NOSTR_EVENTS_SNS_ARN,
           Message: JSON.stringify(comment_event),
@@ -106,6 +106,10 @@ Reply in the user's native language.
           },
         }),
       );
+
+      if (!result.MessageId) {
+        console.log("Error: SNS");
+      }
     } catch (e) {
       console.log(e);
       throw new Error("Intentional failure to trigger DLQ");

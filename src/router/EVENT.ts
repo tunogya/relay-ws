@@ -42,7 +42,7 @@ export const handler: Handler = async (event: APIGatewayEvent, context) => {
         ]),
       };
     }
-    await snsClient.send(
+    const result = await snsClient.send(
       new PublishCommand({
         TopicArn: process.env.NOSTR_EVENTS_SNS_ARN,
         Message: JSON.stringify({
@@ -67,11 +67,20 @@ export const handler: Handler = async (event: APIGatewayEvent, context) => {
         },
       }),
     );
-    return {
-      statusCode: 200,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(["OK", id, true, `Event received successfully.`]),
-    };
+
+    if (result.MessageId) {
+      return {
+        statusCode: 200,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(["OK", id, true, `Event received successfully.`]),
+      };
+    } else {
+      return {
+        statusCode: 200,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(["OK", id, false, `error: SNS`]),
+      };
+    }
   } catch (e) {
     return {
       statusCode: 200,

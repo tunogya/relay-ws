@@ -118,7 +118,7 @@ If no suitable texts are found, return an empty array.`;
           userSk,
         );
 
-        await snsClient.send(
+        const result = await snsClient.send(
           new PublishCommand({
             TopicArn: process.env.NOSTR_EVENTS_SNS_ARN,
             Message: JSON.stringify(comment_event),
@@ -134,6 +134,10 @@ If no suitable texts are found, return an empty array.`;
             },
           }),
         );
+
+        if (!result.MessageId) {
+          console.log("Error: SNS");
+        }
       }
     } catch (_) {
       throw new Error("Intentional failure to trigger DLQ");
