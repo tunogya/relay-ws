@@ -17,6 +17,7 @@ export const handler: Handler = async (event: SNSEvent, context) => {
       const isValid = verifyEvent(_event);
 
       if (!isValid) {
+        console.log("invalid event");
         return;
       }
 
@@ -42,6 +43,8 @@ export const handler: Handler = async (event: SNSEvent, context) => {
           break;
       }
 
+      console.log("queue_url:", queue_url);
+
       if (queue_url) {
         try {
           await sqsClient.send(
@@ -52,6 +55,7 @@ export const handler: Handler = async (event: SNSEvent, context) => {
               MessageGroupId: _event.pubkey,
             }),
           );
+          console.log("Send event to SQS");
         } catch (e) {
           console.log(e);
         }

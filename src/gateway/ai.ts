@@ -17,6 +17,7 @@ export const handler: Handler = async (event: SNSEvent, context) => {
       const isValid = verifyEvent(_event);
 
       if (!isValid) {
+        console.log("invalid event");
         return;
       }
 
@@ -40,6 +41,7 @@ export const handler: Handler = async (event: SNSEvent, context) => {
               MessageGroupId: _event.pubkey,
             }),
           );
+          console.log("Send event to SQS: discuss_reflections.fifo");
         } catch (e) {
           console.log(e);
         }
@@ -61,6 +63,7 @@ export const handler: Handler = async (event: SNSEvent, context) => {
               MessageGroupId: _event.pubkey,
             }),
           );
+          console.log("Send event to SQS: discuss_memories.fifo");
         } catch (e) {
           console.log(e);
         }
@@ -82,6 +85,7 @@ export const handler: Handler = async (event: SNSEvent, context) => {
               MessageGroupId: _event.pubkey,
             }),
           );
+          console.log("Send event to SQS: discuss_dreams.fifo");
         } catch (e) {
           console.log(e);
         }
@@ -99,6 +103,7 @@ export const handler: Handler = async (event: SNSEvent, context) => {
               MessageGroupId: _event.pubkey,
             }),
           );
+          console.log("Send event to SQS: embeddings.fifo");
         } catch (e) {
           console.log(e);
         }
@@ -116,6 +121,7 @@ export const handler: Handler = async (event: SNSEvent, context) => {
               MessageGroupId: _event.pubkey,
             }),
           );
+          console.log("Send event to SQS: moderation.fifo");
         } catch (e) {
           console.log(e);
         }
@@ -133,6 +139,7 @@ export const handler: Handler = async (event: SNSEvent, context) => {
               MessageGroupId: _event.pubkey,
             }),
           );
+          console.log("Send event to SQS: xray.fifo");
         } catch (e) {
           console.log(e);
         }
