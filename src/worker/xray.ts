@@ -1,21 +1,21 @@
-import { Handler, SNSEvent, SNSEventRecord } from "aws-lambda";
+import { Handler, SQSRecord, SQSEvent } from "aws-lambda";
 import { connectToDatabase } from "../utils/astradb";
 import openai from "../utils/openai";
 // @ts-ignore
 import { verifyEvent } from "nostr-tools/pure";
 
 /**
- * xray_content
+ * xray
  * only listen kind = 1
  */
-export const handler: Handler = async (event: SNSEvent, context) => {
+export const handler: Handler = async (event: SQSEvent, context) => {
   const records = event.Records;
 
   const { db } = await connectToDatabase();
 
-  const processRecord = async (record: SNSEventRecord) => {
+  const processRecord = async (record: SQSRecord) => {
     try {
-      const _event = JSON.parse(record.Sns.Message);
+      const _event = JSON.parse(record.body);
       const isValid = verifyEvent(_event);
 
       if (!isValid) {

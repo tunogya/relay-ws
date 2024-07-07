@@ -1,7 +1,7 @@
-import { Handler, SNSEvent, SNSEventRecord } from "aws-lambda";
+import { Handler, SQSEvent, SQSRecord } from "aws-lambda";
 import { connectToDatabase } from "../utils/astradb";
 import { ddbDocClient } from "../utils/ddbDocClient";
-import { DeleteCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
+import { PutCommand } from "@aws-sdk/lib-dynamodb";
 // @ts-ignore
 import { verifyEvent } from "nostr-tools/pure";
 import { parseEventTags } from "../utils/parseTags";
@@ -10,16 +10,16 @@ import { parseEventTags } from "../utils/parseTags";
  * persistence
  * check nostr events and save to db
  * need to parse tags_map for db query
- * listen all kind
+ * listen kind = 0, 1, 4
  */
-export const handler: Handler = async (event: SNSEvent, context) => {
+export const handler: Handler = async (event: SQSEvent, context) => {
   const records = event.Records;
 
   const { db } = await connectToDatabase();
 
-  const processRecord = async (record: SNSEventRecord) => {
+  const processRecord = async (record: SQSRecord) => {
     try {
-      const _event = JSON.parse(record.Sns.Message);
+      const _event = JSON.parse(record.body);
       const isValid = verifyEvent(_event);
 
       if (!isValid) {
@@ -62,7 +62,7 @@ export const handler: Handler = async (event: SNSEvent, context) => {
             }),
           ),
         ]);
-      } else if (_event.kind === 1) {
+      } else if (_event.kind === 1 || _event.kind === 4) {
         filter = { kind: 1, id: _event.id };
         update = {
           $set: {
@@ -84,28 +84,6 @@ export const handler: Handler = async (event: SNSEvent, context) => {
             }),
           ),
         ]);
-      } else if (_event.kind === 5) {
-        const tags = _event.tags;
-        const ids = tags.map((item) => item[1]);
-        for (const id of ids) {
-          await Promise.all([
-            db.collection("events").deleteOne({ id: id }),
-            db.collection("tags").deleteMany({
-              id: id,
-            }),
-            db.collection("contents").deleteMany({
-              id: id,
-            }),
-            ddbDocClient.send(
-              new DeleteCommand({
-                TableName: "events",
-                Key: {
-                  id: id,
-                },
-              }),
-            ),
-          ]);
-        }
       }
     } catch (_) {
       throw new Error("Intentional failure to trigger DLQ");

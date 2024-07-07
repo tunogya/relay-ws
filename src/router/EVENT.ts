@@ -42,8 +42,6 @@ export const handler: Handler = async (event: APIGatewayEvent, context) => {
         ]),
       };
     }
-    const category =
-      tags.find((tag: any[]) => tag[0] === "category")?.[1] || undefined;
     await snsClient.send(
       new PublishCommand({
         TopicArn: process.env.NOSTR_EVENTS_SNS_ARN,
@@ -61,9 +59,11 @@ export const handler: Handler = async (event: APIGatewayEvent, context) => {
             DataType: "Number",
             StringValue: kind.toString(),
           },
-          ...(category && {
-            category: { DataType: "String", StringValue: category },
-          }),
+          premium: {
+            DataType: "Number",
+            // TODO: Premium users
+            StringValue: "1",
+          },
         },
       }),
     );

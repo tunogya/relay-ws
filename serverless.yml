@@ -1,4 +1,4 @@
-service: tripiz-nostr-relay
+service: tripiz-relay
 frameworkVersion: "4"
 
 package:
@@ -10,10 +10,12 @@ package:
 provider:
   name: aws
   runtime: nodejs18.x
-  deploymentMethod: "direct"
-  region: "ap-northeast-1"
+  deploymentMethod: direct
+  region: ap-northeast-1
+  websocketsApiName: nostr-relay
+  websocketsApiRouteSelectionExpression: $request.body.[0]
+  websocketsDescription: Nostr Relay
   environment:
-    NOSTR_EVENTS_SNS_ARN: ${env:NOSTR_EVENTS_SNS_ARN}
     OPENAI_API_KEY: ${env:OPENAI_API_KEY}
     UPSTASH_REDIS_REST_URL: ${env:UPSTASH_REDIS_REST_URL}
     UPSTASH_REDIS_REST_TOKEN: ${env:UPSTASH_REDIS_REST_TOKEN}
@@ -28,145 +30,181 @@ provider:
         - "arn:aws:iam::aws:policy/AmazonAPIGatewayInvokeFullAccess"
 
 functions:
-  persistence:
-    name: "persistence"
-    handler: "src/subscriber/persistence.handler"
-    timeout: 6
+  gateway_base:
+    handler: src/gateway/base.handler
+    timeout: 30
     memorySize: 256
     architecture: arm64
     maximumRetryAttempts: 1
     events:
       - sns:
-          arn: ${env:NOSTR_EVENTS_SNS_ARN}
-  moderation:
-    name: "moderation"
-    handler: "src/subscriber/moderation.handler"
-    timeout: 6
+          arn: arn:aws:sns:ap-northeast-1:913870644571:NostrEvents
+  gateway_ai:
+    handler: src/gateway/ai.handler
+    timeout: 30
     memorySize: 256
     architecture: arm64
     maximumRetryAttempts: 1
     events:
       - sns:
-          arn: ${env:NOSTR_EVENTS_SNS_ARN}
+          arn: arn:aws:sns:ap-northeast-1:913870644571:NostrEvents
           filterPolicyScope: MessageAttributes
           filterPolicy:
             kind:
               - 1
-  embeddings:
-    name: "embeddings"
-    handler: "src/subscriber/embeddings.handler"
-    timeout: 6
-    memorySize: 256
-    architecture: arm64
-    maximumRetryAttempts: 1
-    events:
-      - sns:
-          arn: ${env:NOSTR_EVENTS_SNS_ARN}
-          filterPolicyScope: MessageAttributes
-          filterPolicy:
-            kind:
+            premium:
               - 1
-  xray_content:
-    name: "xray_content"
-    handler: "src/subscriber/xray_content.handler"
+  worker_persistence:
+    handler: src/worker/persistence.handler
     timeout: 30
     memorySize: 256
     architecture: arm64
     maximumRetryAttempts: 1
     events:
-      - sns:
-          arn: ${env:NOSTR_EVENTS_SNS_ARN}
-          filterPolicyScope: MessageAttributes
-          filterPolicy:
-            kind:
-              - 1
-  discuss_dreams:
-    name: "discuss_dreams"
-    handler: "src/subscriber/discuss_dreams.handler"
+      - sqs:
+          arn: arn:aws:sqs:ap-northeast-1:913870644571:persistence.fifo
+          batchSize: 10
+  worker_delete:
+    handler: src/worker/delete.handler
     timeout: 30
     memorySize: 256
     architecture: arm64
     maximumRetryAttempts: 1
     events:
-      - sns:
-          arn: ${env:NOSTR_EVENTS_SNS_ARN}
-          filterPolicyScope: MessageAttributes
-          filterPolicy:
-            kind:
-              - 1
-            category:
-              - dreams
-  discuss_memories:
-    name: "discuss_memories"
-    handler: "src/subscriber/discuss_memories.handler"
+      - sqs:
+          arn: arn:aws:sqs:ap-northeast-1:913870644571:delete.fifo
+          batchSize: 10
+  worker_boardcast:
+    handler: src/worker/boardcast.handler
     timeout: 30
     memorySize: 256
     architecture: arm64
     maximumRetryAttempts: 1
     events:
-      - sns:
-          arn: ${env:NOSTR_EVENTS_SNS_ARN}
-          filterPolicyScope: MessageAttributes
-          filterPolicy:
-            kind:
-              - 1
-            category:
-              - memories
-  discuss_reflections:
-    name: "discuss_reflections"
-    handler: "src/subscriber/discuss_reflections.handler"
+      - sqs:
+          arn: arn:aws:sqs:ap-northeast-1:913870644571:broadcast.fifo
+          batchSize: 10
+  worker_notification:
+    handler: src/worker/notification.handler
     timeout: 30
     memorySize: 256
     architecture: arm64
     maximumRetryAttempts: 1
     events:
-      - sns:
-          arn: ${env:NOSTR_EVENTS_SNS_ARN}
-          filterPolicyScope: MessageAttributes
-          filterPolicy:
-            kind:
-              - 1
-            category:
-              - reflections
-  relay_event:
-    name: "nostr-relay-EVENT"
-    handler: "src/router/EVENT.handler"
+      - sqs:
+          arn: arn:aws:sqs:ap-northeast-1:913870644571:notification.fifo
+          batchSize: 10
+  worker_moderation:
+    handler: src/worker/moderation.handler
     timeout: 30
     memorySize: 256
     architecture: arm64
     maximumRetryAttempts: 1
-  relay_close:
-    name: "nostr-relay-CLOSE"
-    handler: "src/router/CLOSE.handler"
+    events:
+      - sqs:
+          arn: arn:aws:sqs:ap-northeast-1:913870644571:moderation.fifo
+          batchSize: 1
+  worker_embeddings:
+    handler: src/worker/embeddings.handler
     timeout: 30
     memorySize: 256
     architecture: arm64
     maximumRetryAttempts: 1
-  relay_req:
-    name: "nostr-relay-REQ"
-    handler: "src/router/REQ.handler"
+    events:
+      - sqs:
+          arn: arn:aws:sqs:ap-northeast-1:913870644571:embeddings.fifo
+          batchSize: 1
+  worker_xray:
+    handler: src/worker/xray.handler
     timeout: 30
     memorySize: 256
     architecture: arm64
     maximumRetryAttempts: 1
-  relay_default:
-    name: "nostr-relay-default"
-    handler: "src/router/default.handler"
+    events:
+      - sqs:
+          arn: arn:aws:sqs:ap-northeast-1:913870644571:xray.fifo
+          batchSize: 2
+  worker_discuss_dreams:
+    handler: src/worker/discuss_dreams.handler
     timeout: 30
     memorySize: 256
     architecture: arm64
     maximumRetryAttempts: 1
-  relay_connect:
-    name: "nostr-relay-connect"
-    handler: "src/router/connect.handler"
+    events:
+      - sqs:
+          arn: arn:aws:sqs:ap-northeast-1:913870644571:discuss_dreams.fifo
+          batchSize: 2
+  worker_discuss_memories:
+    handler: src/worker/discuss_memories.handler
     timeout: 30
     memorySize: 256
     architecture: arm64
     maximumRetryAttempts: 1
-  relay_disconnect:
-    name: "nostr-relay-disconnect"
-    handler: "src/router/disconnect.handler"
+    events:
+      - sqs:
+          arn: arn:aws:sqs:ap-northeast-1:913870644571:discuss_memories.fifo
+          batchSize: 2
+  worker_discuss_reflections:
+    handler: src/worker/discuss_reflections.handler
     timeout: 30
     memorySize: 256
     architecture: arm64
     maximumRetryAttempts: 1
+    events:
+      - sqs:
+          arn: arn:aws:sqs:ap-northeast-1:913870644571:discuss_reflections.fifo
+          batchSize: 2
+  router_event:
+    handler: src/router/EVENT.handler
+    timeout: 30
+    memorySize: 256
+    architecture: arm64
+    maximumRetryAttempts: 1
+    events:
+      - websocket:
+          route: EVENT
+  router_close:
+    handler: src/router/CLOSE.handler
+    timeout: 30
+    memorySize: 256
+    architecture: arm64
+    maximumRetryAttempts: 1
+    events:
+      - websocket:
+          route: CLOSE
+  router_req:
+    handler: src/router/REQ.handler
+    timeout: 30
+    memorySize: 256
+    architecture: arm64
+    maximumRetryAttempts: 1
+    events:
+      - websocket:
+          route: REQ
+  router_default:
+    handler: src/router/default.handler
+    timeout: 30
+    memorySize: 256
+    architecture: arm64
+    maximumRetryAttempts: 1
+    events:
+      - websocket:
+          route: $default
+  router_connect:
+    handler: src/router/connect.handler
+    timeout: 30
+    memorySize: 256
+    architecture: arm64
+    maximumRetryAttempts: 1
+    events:
+      - websocket:
+          route: $connect
+  router_disconnect:
+    handler: src/router/disconnect.handler
+    timeout: 30
+    memorySize: 256
+    architecture: arm64
+    maximumRetryAttempts: 1
+    events:
+      - websocket:
+          route: $disconnect

@@ -1,32 +1,26 @@
-import { Handler, SNSEvent, SNSEventRecord } from "aws-lambda";
+import { Handler, SQSEvent, SQSRecord } from "aws-lambda";
 import { connectToDatabase } from "../utils/astradb";
 import openai from "../utils/openai";
 import { generateSecretKey } from "../utils/generateSecretKey";
-import { ddbDocClient } from "../utils/ddbDocClient";
-import { PutCommand } from "@aws-sdk/lib-dynamodb";
 import { newUserInfo } from "../utils/newUserInfo";
-import redisClient from "./../utils/redisClient";
-import apiGatewayClient from "./../utils/apiGatewayClient";
-import { PostToConnectionCommand } from "@aws-sdk/client-apigatewaymanagementapi";
 // @ts-ignore
-import { verifyEvent } from "nostr-tools/pure";
-import { parseEventTags } from "../utils/parseTags";
+import { verifyEvent, getPublicKey, finalizeEvent } from "nostr-tools/pure";
+import snsClient from "../utils/snsClient";
+import { PublishCommand } from "@aws-sdk/client-sns";
 
 /**
  * discuss dreams
- * Carl Jung, ready to talk with your dreams
- * only listen kind = 1, and category = dreams
+ * talk with your dreams
+ * only listen kind = 1
  */
-export const handler: Handler = async (event: SNSEvent, context) => {
+export const handler: Handler = async (event: SQSEvent, context) => {
   const records = event.Records;
 
   const { db } = await connectToDatabase();
 
-  const { getPublicKey, finalizeEvent } = require("nostr-tools/pure");
-
-  const processRecord = async (record: SNSEventRecord) => {
+  const processRecord = async (record: SQSRecord) => {
     try {
-      const _event = JSON.parse(record.Sns.Message);
+      const _event = JSON.parse(record.body);
       const isValid = verifyEvent(_event);
 
       if (!isValid) {
@@ -34,13 +28,6 @@ export const handler: Handler = async (event: SNSEvent, context) => {
       }
 
       if (_event.kind !== 1) {
-        return;
-      }
-
-      const category =
-        _event.tags.find((tag: any[]) => tag?.[0] === "category")?.[1] ||
-        undefined;
-      if (category !== "dreams") {
         return;
       }
 
@@ -109,33 +96,23 @@ Use Jungian psychological theories, including the collective unconscious, archet
         },
         userSk,
       );
-      const tags_array = parseEventTags(comment_event);
-      await Promise.all([
-        db.collection("events").insertOne(comment_event),
-        db.collection("tags").insertMany(tags_array),
-        ddbDocClient.send(
-          new PutCommand({
-            TableName: "events",
-            Item: comment_event,
-          }),
-        ),
-      ]);
-      const connectionId = await redisClient.get(
-        `pubkey2conn:${_event.pubkey}`,
+
+      await snsClient.send(
+        new PublishCommand({
+          TopicArn: process.env.NOSTR_EVENTS_SNS_ARN,
+          Message: JSON.stringify(comment_event),
+          MessageAttributes: {
+            kind: {
+              DataType: "Number",
+              StringValue: comment_event.kind.toString(),
+            },
+            premium: {
+              DataType: "Number",
+              StringValue: "0", // bot is not premium user
+            },
+          },
+        }),
       );
-      if (connectionId) {
-        try {
-          await apiGatewayClient.send(
-            new PostToConnectionCommand({
-              ConnectionId: `${connectionId}`,
-              Data: JSON.stringify(["EVENT", _event.id, comment_event]),
-            }),
-          );
-          console.log("Successfully sent message to connection", connectionId);
-        } catch (e) {
-          console.log(e);
-        }
-      }
     } catch (e) {
       console.log(e);
       throw new Error("Intentional failure to trigger DLQ");
