@@ -65,15 +65,6 @@ functions:
     events:
       - sns:
           arn: ${env:NOSTR_EVENTS_SNS_ARN}
-  gateway_notification:
-    handler: src/gateway/notification.handler
-    timeout: 30
-    memorySize: 256
-    architecture: arm64
-    maximumRetryAttempts: 1
-    events:
-      - sns:
-          arn: ${env:NOSTR_EVENTS_SNS_ARN}
   worker_persistence:
     handler: src/worker/persistence.handler
     timeout: 30
