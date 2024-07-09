@@ -56,6 +56,24 @@ functions:
               - 1
             premium:
               - 1
+  gateway_boardcast:
+    handler: src/gateway/boardcast.handler
+    timeout: 30
+    memorySize: 256
+    architecture: arm64
+    maximumRetryAttempts: 1
+    events:
+      - sns:
+          arn: ${env:NOSTR_EVENTS_SNS_ARN}
+  gateway_notification:
+    handler: src/gateway/notification.handler
+    timeout: 30
+    memorySize: 256
+    architecture: arm64
+    maximumRetryAttempts: 1
+    events:
+      - sns:
+          arn: ${env:NOSTR_EVENTS_SNS_ARN}
   worker_persistence:
     handler: src/worker/persistence.handler
     timeout: 30
@@ -76,24 +94,6 @@ functions:
       - sqs:
           arn: arn:aws:sqs:ap-northeast-1:913870644571:delete.fifo
           batchSize: 10
-  worker_boardcast:
-    handler: src/worker/boardcast.handler
-    timeout: 30
-    memorySize: 256
-    architecture: arm64
-    maximumRetryAttempts: 1
-    events:
-      - sns:
-          arn: ${env:NOSTR_EVENTS_SNS_ARN}
-  worker_notification:
-    handler: src/worker/notification.handler
-    timeout: 30
-    memorySize: 256
-    architecture: arm64
-    maximumRetryAttempts: 1
-    events:
-      - sns:
-          arn: ${env:NOSTR_EVENTS_SNS_ARN}
   worker_moderation:
     handler: src/worker/moderation.handler
     timeout: 30

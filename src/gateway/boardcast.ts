@@ -1,4 +1,4 @@
-import { Handler, SQSEvent, SQSRecord } from "aws-lambda";
+import { Handler, SNSEvent, SNSEventRecord } from "aws-lambda";
 // @ts-ignore
 import { verifyEvent } from "nostr-tools/pure";
 import redisClient from "../utils/redisClient";
@@ -9,12 +9,12 @@ import { PostToConnectionCommand } from "@aws-sdk/client-apigatewaymanagementapi
  * boardcast
  * listen kind = 1, 4
  */
-export const handler: Handler = async (event: SQSEvent, context) => {
+export const handler: Handler = async (event: SNSEvent, context) => {
   const records = event.Records;
 
-  const processRecord = async (record: SQSRecord) => {
+  const processRecord = async (record: SNSEventRecord) => {
     try {
-      const _event = JSON.parse(record.body);
+      const _event = JSON.parse(record.Sns.Message);
       const isValid = verifyEvent(_event);
 
       if (!isValid) {
