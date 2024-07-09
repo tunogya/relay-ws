@@ -83,9 +83,8 @@ functions:
     architecture: arm64
     maximumRetryAttempts: 1
     events:
-      - sqs:
-          arn: arn:aws:sqs:ap-northeast-1:913870644571:broadcast.fifo
-          batchSize: 10
+      - sns:
+          arn: ${env:NOSTR_EVENTS_SNS_ARN}
   worker_notification:
     handler: src/worker/notification.handler
     timeout: 30
@@ -93,9 +92,8 @@ functions:
     architecture: arm64
     maximumRetryAttempts: 1
     events:
-      - sqs:
-          arn: arn:aws:sqs:ap-northeast-1:913870644571:notification.fifo
-          batchSize: 10
+      - sns:
+          arn: ${env:NOSTR_EVENTS_SNS_ARN}
   worker_moderation:
     handler: src/worker/moderation.handler
     timeout: 30
