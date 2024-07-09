@@ -2,7 +2,7 @@
 
 This is a nostr serverless relay, written in TypeScript. It currently supports the entire relay protocol, and persists data with AstraDB and DynamoDB.
 
-[System Structure](https://www.figma.com/board/KzFPyHX9pRoF9VunaW3Pp2/Tripiz-Relay?node-id=0-1&t=Dndf9kRhNvzwE7X9-1)
+![System Structure](./structure.png)
 
 ## Nostr Protocol Support
 
