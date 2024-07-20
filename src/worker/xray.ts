@@ -43,7 +43,7 @@ export const handler: Handler = async (event: SQSEvent, context) => {
             content: _event.content,
           },
         ],
-        model: "gpt-3.5-turbo",
+        model: "gpt-4o-mini",
         temperature: 0.2,
         user: _event.pubkey,
         response_format: {
