@@ -37,7 +37,7 @@ export const handler: Handler = async (event: SNSEvent, context) => {
         case 5:
           // delete
           queue_url =
-            "https://sqs.ap-northeast-1.amazonaws.com/913870644571/delete.fifo";
+            "https://sqs.ap-northeast-1.amazonaws.com/913870644571/persistence.fifo";
           break;
         default:
           break;

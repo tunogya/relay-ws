@@ -75,16 +75,6 @@ functions:
       - sqs:
           arn: arn:aws:sqs:ap-northeast-1:913870644571:persistence.fifo
           batchSize: 10
-  worker_delete:
-    handler: src/worker/delete.handler
-    timeout: 30
-    memorySize: 256
-    architecture: arm64
-    maximumRetryAttempts: 1
-    events:
-      - sqs:
-          arn: arn:aws:sqs:ap-northeast-1:913870644571:delete.fifo
-          batchSize: 10
   worker_moderation:
     handler: src/worker/moderation.handler
     timeout: 30
