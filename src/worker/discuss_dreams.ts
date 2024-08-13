@@ -12,6 +12,7 @@ import { PublishCommand } from "@aws-sdk/client-sns";
  * discuss dreams
  * talk with your dreams
  * only listen kind = 1
+ * @deprecated
  */
 export const handler: Handler = async (event: SQSEvent, context) => {
   const records = event.Records;
