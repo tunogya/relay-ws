@@ -54,6 +54,7 @@ functions:
           filterPolicy:
             kind:
               - 1
+              - 1063
             premium:
               - 1
   gateway_boardcast:
