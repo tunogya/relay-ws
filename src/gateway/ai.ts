@@ -6,10 +6,11 @@ import { SendMessageCommand } from "@aws-sdk/client-sqs";
 
 /**
  * AI gateway
- * only listen kind = 1, premium = 1
+ * only listen kind = 1 or 1063, premium = 1
  */
 export const handler: Handler = async (event: SNSEvent, context) => {
   const records = event.Records;
+  const ALLOWKINDS = [1, 1063];
 
   const processRecord = async (record: SNSEventRecord) => {
     try {
@@ -21,7 +22,7 @@ export const handler: Handler = async (event: SNSEvent, context) => {
         return;
       }
 
-      if (_event.kind !== 1) {
+      if (ALLOWKINDS.indexOf(_event.kind) === -1) {
         return;
       }
 
