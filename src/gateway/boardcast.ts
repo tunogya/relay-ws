@@ -7,11 +7,10 @@ import { PostToConnectionCommand } from "@aws-sdk/client-apigatewaymanagementapi
 
 /**
  * boardcast
- * listen kind = 1, 4, 1063
+ * listen all events
  */
 export const handler: Handler = async (event: SNSEvent, context) => {
   const records = event.Records;
-  const ALLOWKINDS = [1, 4, 1063];
 
   const processRecord = async (record: SNSEventRecord) => {
     try {
@@ -19,10 +18,6 @@ export const handler: Handler = async (event: SNSEvent, context) => {
       const isValid = verifyEvent(_event);
 
       if (!isValid) {
-        return;
-      }
-
-      if (ALLOWKINDS.indexOf(_event.kind) === -1) {
         return;
       }
 
