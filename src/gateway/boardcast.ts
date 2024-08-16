@@ -1,6 +1,4 @@
 import { Handler, SNSEvent, SNSEventRecord } from "aws-lambda";
-// @ts-ignore
-import { verifyEvent } from "nostr-tools/pure";
 import redisClient from "../utils/redisClient";
 import apiGatewayClient from "../utils/apiGatewayClient";
 import { PostToConnectionCommand } from "@aws-sdk/client-apigatewaymanagementapi";
@@ -15,18 +13,6 @@ export const handler: Handler = async (event: SNSEvent, context) => {
   const processRecord = async (record: SNSEventRecord) => {
     try {
       const _event = JSON.parse(record.Sns.Message);
-      const isValid = verifyEvent(_event);
-
-      // handle unsigned events
-      if (!isValid) {
-        // need to save in redis
-        try {
-          const pubkey = _event.pubkey;
-          await redisClient.rpush(`${pubkey}:review`, _event);
-        } catch (e) {
-          console.log(e);
-        }
-      }
 
       // handle events
       for (const tag of _event.tags) {
