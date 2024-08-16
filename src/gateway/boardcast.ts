@@ -17,10 +17,18 @@ export const handler: Handler = async (event: SNSEvent, context) => {
       const _event = JSON.parse(record.Sns.Message);
       const isValid = verifyEvent(_event);
 
+      // handle unsigned events
       if (!isValid) {
-        return;
+        // need to save in redis
+        try {
+          const pubkey = _event.pubkey;
+          await redisClient.rpush(`${pubkey}:review`, _event);
+        } catch (e) {
+          console.log(e);
+        }
       }
 
+      // handle events
       for (const tag of _event.tags) {
         if (tag?.[0] === "p") {
           const pubkey = tag?.[1];
