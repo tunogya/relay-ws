@@ -10,7 +10,7 @@ import { parseEventTags } from "../utils/parseTags";
  * persistence
  * check nostr events and save to db, or delete it
  * need to parse tags_map for db query
- * listen kind = 0, 1, 4, 5
+ * listen kind = 0, 1, 4, 5, 1063
  */
 export const handler: Handler = async (event: SQSEvent, context) => {
   const records = event.Records;
@@ -62,7 +62,11 @@ export const handler: Handler = async (event: SQSEvent, context) => {
             }),
           ),
         ]);
-      } else if (_event.kind === 1 || _event.kind === 4) {
+      } else if (
+        _event.kind === 1 ||
+        _event.kind === 4 ||
+        _event.kind === 1063
+      ) {
         filter = { kind: 1, id: _event.id };
         update = {
           $set: {

@@ -6,7 +6,7 @@ import { verifyEvent } from "nostr-tools/pure";
 
 /**
  * embeddings
- * only listen kind = 1
+ * only listen kind = 1, 1063
  */
 export const handler: Handler = async (event: SQSEvent, context) => {
   const records = event.Records;
@@ -22,7 +22,7 @@ export const handler: Handler = async (event: SQSEvent, context) => {
         return;
       }
 
-      if (_event.kind !== 1) {
+      if (_event.kind !== 1 && _event.kind !== 1063) {
         return;
       }
 

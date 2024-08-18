@@ -20,13 +20,15 @@
     "@aws-sdk/client-sqs": "^3.478.0",
     "@aws-sdk/lib-dynamodb": "^3.481.0",
     "@datastax/astra-db-ts": "^1.2.1",
+    "@types/uuid": "^10.0.0",
     "@upstash/ratelimit": "^1.0.0",
     "@upstash/redis": "^1.27.1",
     "aws-lambda": "^1.0.7",
     "bn.js": "^5.2.1",
     "dotenv": "^16.4.5",
     "nostr-tools": "^2.7.0",
-    "openai": "^4.24.1"
+    "openai": "^4.24.1",
+    "uuid": "^10.0.0"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.120",

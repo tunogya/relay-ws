@@ -26,6 +26,7 @@ export const handler: Handler = async (event: SNSEvent, context) => {
         return;
       }
 
+      // @deprecated
       // $discuss_reflections
       if (
         _event.tags.some(
@@ -48,6 +49,7 @@ export const handler: Handler = async (event: SNSEvent, context) => {
         }
       }
 
+      // @deprecated
       // $discuss_memories
       if (
         _event.tags.some(
@@ -70,6 +72,7 @@ export const handler: Handler = async (event: SNSEvent, context) => {
         }
       }
 
+      // @deprecated
       // $discuss_dreams
       if (
         _event.tags.some(
@@ -84,6 +87,31 @@ export const handler: Handler = async (event: SNSEvent, context) => {
                 "https://sqs.ap-northeast-1.amazonaws.com/913870644571/discuss_dreams.fifo",
               MessageDeduplicationId: _event.id,
               MessageGroupId: _event.pubkey,
+            }),
+          );
+          console.log("Send event to SQS: discuss_dreams.fifo");
+        } catch (e) {
+          console.log(e);
+        }
+      }
+
+      const pList = _event.tags.filter((i) => i[0] === "p");
+
+      for (const p of pList) {
+        try {
+          await sqsClient.send(
+            new SendMessageCommand({
+              MessageBody: JSON.stringify(_event),
+              QueueUrl:
+                "https://sqs.ap-northeast-1.amazonaws.com/913870644571/discuss.fifo",
+              MessageDeduplicationId: `${_event.id}${p[1]}`,
+              MessageGroupId: _event.id,
+              MessageAttributes: {
+                pubkey: {
+                  DataType: "string",
+                  StringValue: p[1],
+                },
+              },
             }),
           );
           console.log("Send event to SQS: discuss_dreams.fifo");
