@@ -6,7 +6,7 @@ import { SendMessageCommand } from "@aws-sdk/client-sqs";
 
 /**
  * AI gateway
- * only listen kind = 1 or 1063, premium = 1
+ * only listen kind = 1 or 1063
  */
 export const handler: Handler = async (event: SNSEvent, context) => {
   const records = event.Records;
@@ -23,98 +23,30 @@ export const handler: Handler = async (event: SNSEvent, context) => {
       }
 
       if (ALLOWKINDS.indexOf(_event.kind) === -1) {
+        console.log("invalid kind");
         return;
-      }
-
-      // @deprecated
-      // $discuss_reflections
-      if (
-        _event.tags.some(
-          (item) => item?.[0] === "category" && item?.[1] === "reflections",
-        )
-      ) {
-        try {
-          await sqsClient.send(
-            new SendMessageCommand({
-              MessageBody: JSON.stringify(_event),
-              QueueUrl:
-                "https://sqs.ap-northeast-1.amazonaws.com/913870644571/discuss_reflections.fifo",
-              MessageDeduplicationId: _event.id,
-              MessageGroupId: _event.pubkey,
-            }),
-          );
-          console.log("Send event to SQS: discuss_reflections.fifo");
-        } catch (e) {
-          console.log(e);
-        }
-      }
-
-      // @deprecated
-      // $discuss_memories
-      if (
-        _event.tags.some(
-          (item) => item?.[0] === "category" && item?.[1] === "memories",
-        )
-      ) {
-        try {
-          await sqsClient.send(
-            new SendMessageCommand({
-              MessageBody: JSON.stringify(_event),
-              QueueUrl:
-                "https://sqs.ap-northeast-1.amazonaws.com/913870644571/discuss_memories.fifo",
-              MessageDeduplicationId: _event.id,
-              MessageGroupId: _event.pubkey,
-            }),
-          );
-          console.log("Send event to SQS: discuss_memories.fifo");
-        } catch (e) {
-          console.log(e);
-        }
-      }
-
-      // @deprecated
-      // $discuss_dreams
-      if (
-        _event.tags.some(
-          (item) => item?.[0] === "category" && item?.[1] === "dreams",
-        )
-      ) {
-        try {
-          await sqsClient.send(
-            new SendMessageCommand({
-              MessageBody: JSON.stringify(_event),
-              QueueUrl:
-                "https://sqs.ap-northeast-1.amazonaws.com/913870644571/discuss_dreams.fifo",
-              MessageDeduplicationId: _event.id,
-              MessageGroupId: _event.pubkey,
-            }),
-          );
-          console.log("Send event to SQS: discuss_dreams.fifo");
-        } catch (e) {
-          console.log(e);
-        }
       }
 
       const pList = _event.tags.filter((i) => i[0] === "p");
 
-      for (const p of pList) {
+      for (let i = 0; i < pList.length; i++) {
         try {
           await sqsClient.send(
             new SendMessageCommand({
               MessageBody: JSON.stringify(_event),
               QueueUrl:
                 "https://sqs.ap-northeast-1.amazonaws.com/913870644571/discuss.fifo",
-              MessageDeduplicationId: `${_event.id}${p[1]}`,
+              MessageDeduplicationId: `${_event.id}-${i}`,
               MessageGroupId: _event.id,
               MessageAttributes: {
-                pubkey: {
-                  DataType: "string",
-                  StringValue: p[1],
+                index: {
+                  DataType: "Number",
+                  StringValue: `${i}`,
                 },
               },
             }),
           );
-          console.log("Send event to SQS: discuss_dreams.fifo");
+          console.log("Send event to SQS: discuss.fifo");
         } catch (e) {
           console.log(e);
         }
@@ -151,24 +83,6 @@ export const handler: Handler = async (event: SNSEvent, context) => {
             }),
           );
           console.log("Send event to SQS: moderation.fifo");
-        } catch (e) {
-          console.log(e);
-        }
-      }
-
-      // $xray
-      if (_event.content) {
-        try {
-          await sqsClient.send(
-            new SendMessageCommand({
-              MessageBody: JSON.stringify(_event),
-              QueueUrl:
-                "https://sqs.ap-northeast-1.amazonaws.com/913870644571/xray.fifo",
-              MessageDeduplicationId: _event.id,
-              MessageGroupId: _event.pubkey,
-            }),
-          );
-          console.log("Send event to SQS: xray.fifo");
         } catch (e) {
           console.log(e);
         }

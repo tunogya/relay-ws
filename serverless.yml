@@ -55,8 +55,6 @@ functions:
             kind:
               - 1
               - 1063
-            premium:
-              - 1
   gateway_boardcast:
     handler: src/gateway/boardcast.handler
     timeout: 30

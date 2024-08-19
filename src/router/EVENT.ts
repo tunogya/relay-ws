@@ -59,11 +59,6 @@ export const handler: Handler = async (event: APIGatewayEvent, context) => {
             DataType: "Number",
             StringValue: kind.toString(),
           },
-          premium: {
-            DataType: "Number",
-            // TODO: Premium users
-            StringValue: "1",
-          },
         },
       }),
     );

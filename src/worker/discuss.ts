@@ -21,8 +21,11 @@ export const handler: Handler = async (event: SQSEvent, context) => {
   const processRecord = async (record: SQSRecord) => {
     try {
       const _event = JSON.parse(record.body);
-      const p = record.messageAttributes["pubkey"].stringValue;
+      const index = Number(record.messageAttributes["index"].stringValue || 0);
       const isValid = verifyEvent(_event);
+
+      const pList = _event.tags.filter((i: any) => i[0] === "p");
+      const aiPubkey = pList[index][1];
 
       if (!isValid) {
         return;
@@ -36,7 +39,7 @@ export const handler: Handler = async (event: SQSEvent, context) => {
 
       const profile = await db.collection("events").findOne({
         kind: 0,
-        pubkey: p,
+        pubkey: aiPubkey,
       });
       const prompt = `This is your profile: ${JSON.stringify(profile || {})}`;
 
@@ -48,11 +51,11 @@ export const handler: Handler = async (event: SQSEvent, context) => {
             $or: [
               {
                 kind: 1,
-                pubkey: p,
+                pubkey: aiPubkey,
               },
               {
                 kind: 1603,
-                pubkey: p,
+                pubkey: aiPubkey,
               },
             ],
           },
@@ -103,7 +106,7 @@ export const handler: Handler = async (event: SQSEvent, context) => {
           TopicArn: process.env.NOSTR_EVENTS_SNS_ARN,
           Message: JSON.stringify({
             id: uuidv4(),
-            pubkey: p,
+            pubkey: aiPubkey,
             created_at: Math.floor(Date.now() / 1000),
             kind: 1,
             content: reply,
