@@ -12,8 +12,8 @@ provider:
   runtime: nodejs18.x
   deploymentMethod: direct
   region: ap-northeast-1
+  websocketsApiName: relay-ws
   websocketsApiRouteSelectionExpression: $request.body.[0]
-  websocketsDescription: Relay Websocket
   environment:
     NOSTR_EVENTS_SNS_ARN: ${env:NOSTR_EVENTS_SNS_ARN}
     OPENAI_API_KEY: ${env:OPENAI_API_KEY}
