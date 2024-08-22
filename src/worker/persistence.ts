@@ -4,7 +4,6 @@ import { ddbDocClient } from "../utils/ddbDocClient";
 import { PutCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb";
 // @ts-ignore
 import { verifyEvent } from "nostr-tools/pure";
-import { parseEventTags } from "../utils/parseTags";
 
 /**
  * persistence
@@ -38,23 +37,8 @@ export const handler: Handler = async (event: SQSEvent, context) => {
             created_at: _event.created_at,
           },
         };
-        let tagsArray = [];
-        for (const tag of _event.tags) {
-          const length = tag.length;
-          if (length < 2) {
-            continue;
-          }
-          const item: any = {
-            id: _event.id,
-          };
-          for (let i = 0; i < length; i++) {
-            item[`tag${i}`] = tag[i];
-          }
-          tagsArray.push(item);
-        }
         await Promise.all([
           db.collection("events").updateOne(filter, update, { upsert: true }),
-          db.collection("tags").insertMany(tagsArray),
           ddbDocClient.send(
             new PutCommand({
               TableName: "events",
@@ -77,10 +61,8 @@ export const handler: Handler = async (event: SQSEvent, context) => {
             created_at: _event.created_at,
           },
         };
-        const tags_array = parseEventTags(_event);
         await Promise.all([
           db.collection("events").updateOne(filter, update, { upsert: true }),
-          db.collection("tags").insertMany(tags_array),
           ddbDocClient.send(
             new PutCommand({
               TableName: "events",
@@ -96,14 +78,6 @@ export const handler: Handler = async (event: SQSEvent, context) => {
             await Promise.all([
               // delet events
               db.collection("events").deleteOne({ id: id }),
-              // delete tags
-              db.collection("tags").deleteMany({
-                id: id,
-              }),
-              // delete xray-contents
-              db.collection("contents").deleteMany({
-                id: id,
-              }),
               // delete dynamodb backup
               ddbDocClient.send(
                 new DeleteCommand({
