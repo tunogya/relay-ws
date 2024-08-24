@@ -21,44 +21,19 @@ export const handler: Handler = async (event: SNSEvent, context) => {
         return;
       }
 
-      let queue_url = "";
-
-      switch (_event.kind) {
-        case 0:
-          // persistence
-          queue_url =
-            "https://sqs.ap-northeast-1.amazonaws.com/913870644571/persistence.fifo";
-          break;
-        case 1:
-          // persistence
-          queue_url =
-            "https://sqs.ap-northeast-1.amazonaws.com/913870644571/persistence.fifo";
-          break;
-        case 5:
-          // delete
-          queue_url =
-            "https://sqs.ap-northeast-1.amazonaws.com/913870644571/persistence.fifo";
-          break;
-        default:
-          break;
-      }
-
-      console.log("queue_url:", queue_url);
-
-      if (queue_url) {
-        try {
-          await sqsClient.send(
-            new SendMessageCommand({
-              MessageBody: JSON.stringify(_event),
-              QueueUrl: queue_url,
-              MessageDeduplicationId: _event.id,
-              MessageGroupId: _event.pubkey,
-            }),
-          );
-          console.log("Send event to SQS");
-        } catch (e) {
-          console.log(e);
-        }
+      try {
+        await sqsClient.send(
+          new SendMessageCommand({
+            MessageBody: JSON.stringify(_event),
+            QueueUrl:
+              "https://sqs.ap-northeast-1.amazonaws.com/913870644571/persistence.fifo",
+            MessageDeduplicationId: _event.id,
+            MessageGroupId: _event.pubkey,
+          }),
+        );
+        console.log("Send event to SQS");
+      } catch (e) {
+        console.log(e);
       }
     } catch (e) {
       console.log(e);
