@@ -1,11 +1,10 @@
 import { Handler, SQSEvent, SQSRecord } from "aws-lambda";
 import { connectToDatabase } from "../utils/astradb";
 import openai from "../utils/openai";
-// @ts-ignore
-import { verifyEvent } from "nostr-tools/pure";
 
 /**
  * embeddings
+ * already verified event and check duplicate in router and gateway
  * only handle kind = 1, 1063
  */
 export const handler: Handler = async (event: SQSEvent, context) => {
@@ -16,24 +15,12 @@ export const handler: Handler = async (event: SQSEvent, context) => {
   const processRecord = async (record: SQSRecord) => {
     try {
       const _event = JSON.parse(record.body);
-      const isValid = verifyEvent(_event);
-
-      if (!isValid) {
-        return;
-      }
 
       if (_event.kind !== 1 && _event.kind !== 1063) {
         return;
       }
 
       if (!_event.content) {
-        return;
-      }
-
-      // check if already has vector
-      const event = await db.collection("events").findOne({ id: _event.id });
-
-      if (event && event.$vector) {
         return;
       }
 

@@ -5,8 +5,6 @@ import { PostToConnectionCommand } from "@aws-sdk/client-apigatewaymanagementapi
 
 /**
  * boardcast gateway
- * listen all valid and invalid events
- * handle all valid and invalid events
  */
 export const handler: Handler = async (event: SNSEvent, context) => {
   const records = event.Records;

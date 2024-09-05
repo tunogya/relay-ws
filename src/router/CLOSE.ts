@@ -8,7 +8,7 @@ import { APIGatewayEvent, Handler } from "aws-lambda";
  * From relay to client:
  * ["CLOSED", <subscription_id>, <message>]
  *
- * message: duplicate, pow, blocked, rate-limited, invalid, and error
+ * message
  */
 export const handler: Handler = async (event: APIGatewayEvent, context) => {
   const messageArray = JSON.parse(

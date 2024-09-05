@@ -3,6 +3,7 @@ import snsClient from "../utils/snsClient";
 import { PublishCommand } from "@aws-sdk/client-sns";
 // @ts-ignore
 import { verifyEvent } from "nostr-tools/pure";
+import { connectToDatabase } from "../utils/astradb";
 
 /*
  * From client to relay:
@@ -21,6 +22,7 @@ export const handler: Handler = async (event: APIGatewayEvent, context) => {
   // @ts-ignore
   const { id, kind, pubkey, created_at, content, tags, sig } = messageArray[1];
   try {
+    // check invalid
     const isValid = verifyEvent({
       id,
       kind,
@@ -42,6 +44,30 @@ export const handler: Handler = async (event: APIGatewayEvent, context) => {
         ]),
       };
     }
+
+    const { db } = await connectToDatabase();
+    const event = await db.collection("events").findOne({
+      id: id,
+    });
+    if (event) {
+      return {
+        statusCode: 200,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify([
+          "OK",
+          id,
+          false,
+          `duplicate: this event already exisest.`,
+        ]),
+      };
+    }
+
+    // TODO: check pow
+
+    // TODO: check blocked
+
+    // TODO: check rate-limited
+
     const result = await snsClient.send(
       new PublishCommand({
         TopicArn: process.env.NOSTR_EVENTS_SNS_ARN,
@@ -73,14 +99,14 @@ export const handler: Handler = async (event: APIGatewayEvent, context) => {
       return {
         statusCode: 200,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(["OK", id, false, `error: SNS`]),
+        body: JSON.stringify(["OK", id, false, `error: SNS send error.`]),
       };
     }
   } catch (e) {
     return {
       statusCode: 200,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(["OK", id, false, `error: ${e}`]),
+      body: JSON.stringify(["OK", id, false, `error: ${e}.`]),
     };
   }
 };

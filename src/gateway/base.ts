@@ -6,8 +6,6 @@ import { SendMessageCommand } from "@aws-sdk/client-sqs";
 
 /**
  * base gateway
- * listen all valid events
- * handle all valid events
  */
 export const handler: Handler = async (event: SNSEvent, context) => {
   const records = event.Records;

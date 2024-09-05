@@ -2,13 +2,11 @@ import { Handler, SQSEvent, SQSRecord } from "aws-lambda";
 import { connectToDatabase } from "../utils/astradb";
 import { ddbDocClient } from "../utils/ddbDocClient";
 import { PutCommand, DeleteCommand } from "@aws-sdk/lib-dynamodb";
-// @ts-ignore
-import { verifyEvent } from "nostr-tools/pure";
 
 /**
  * persistence
  * check nostr events and save to db, or delete it
- * need to parse tags_map for db query
+ * already verified event and check duplicate in router and gateway
  * only handle kind = 0, 1, 5, 1063
  */
 export const handler: Handler = async (event: SQSEvent, context) => {
@@ -19,11 +17,6 @@ export const handler: Handler = async (event: SQSEvent, context) => {
   const processRecord = async (record: SQSRecord) => {
     try {
       const _event = JSON.parse(record.body);
-      const isValid = verifyEvent(_event);
-
-      if (!isValid) {
-        return;
-      }
 
       let filter, update;
       if (_event.kind === 0) {
@@ -68,7 +61,7 @@ export const handler: Handler = async (event: SQSEvent, context) => {
         ]);
       } else if (_event.kind === 5) {
         const tags = _event.tags;
-        const ids = tags.map((item) => item[1]);
+        const ids = tags.map((item: any) => item[1]);
         for (const id of ids) {
           try {
             await Promise.all([
