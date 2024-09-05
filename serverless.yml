@@ -72,16 +72,6 @@ functions:
       - sqs:
           arn: arn:aws:sqs:ap-northeast-1:913870644571:persistence.fifo
           batchSize: 10
-  worker_moderation:
-    handler: src/worker/moderation.handler
-    timeout: 30
-    memorySize: 256
-    architecture: arm64
-    maximumRetryAttempts: 1
-    events:
-      - sqs:
-          arn: arn:aws:sqs:ap-northeast-1:913870644571:moderation.fifo
-          batchSize: 1
   worker_embeddings:
     handler: src/worker/embeddings.handler
     timeout: 30
@@ -92,16 +82,16 @@ functions:
       - sqs:
           arn: arn:aws:sqs:ap-northeast-1:913870644571:embeddings.fifo
           batchSize: 1
-  worker_discuss:
-    handler: src/worker/discuss.handler
+  worker_assistant:
+    handler: src/worker/assistant.handler
     timeout: 30
     memorySize: 256
     architecture: arm64
     maximumRetryAttempts: 1
     events:
       - sqs:
-          arn: arn:aws:sqs:ap-northeast-1:913870644571:discuss.fifo
-          batchSize: 2
+          arn: arn:aws:sqs:ap-northeast-1:913870644571:assistant.fifo
+          batchSize: 1
   router_event:
     handler: src/router/EVENT.handler
     timeout: 30

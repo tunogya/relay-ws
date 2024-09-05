@@ -27,31 +27,6 @@ export const handler: Handler = async (event: SNSEvent, context) => {
         return;
       }
 
-      const pList = _event.tags.filter((i) => i[0] === "p");
-
-      for (let i = 0; i < pList.length; i++) {
-        try {
-          await sqsClient.send(
-            new SendMessageCommand({
-              MessageBody: JSON.stringify(_event),
-              QueueUrl:
-                "https://sqs.ap-northeast-1.amazonaws.com/913870644571/discuss.fifo",
-              MessageDeduplicationId: `${_event.id}-${i}`,
-              MessageGroupId: _event.id,
-              MessageAttributes: {
-                index: {
-                  DataType: "Number",
-                  StringValue: `${i}`,
-                },
-              },
-            }),
-          );
-          console.log("Send event to SQS: discuss.fifo");
-        } catch (e) {
-          console.log(e);
-        }
-      }
-
       // $embeddings
       if (_event.content) {
         try {
@@ -65,24 +40,6 @@ export const handler: Handler = async (event: SNSEvent, context) => {
             }),
           );
           console.log("Send event to SQS: embeddings.fifo");
-        } catch (e) {
-          console.log(e);
-        }
-      }
-
-      // $moderation
-      if (_event.content) {
-        try {
-          await sqsClient.send(
-            new SendMessageCommand({
-              MessageBody: JSON.stringify(_event),
-              QueueUrl:
-                "https://sqs.ap-northeast-1.amazonaws.com/913870644571/moderation.fifo",
-              MessageDeduplicationId: _event.id,
-              MessageGroupId: _event.pubkey,
-            }),
-          );
-          console.log("Send event to SQS: moderation.fifo");
         } catch (e) {
           console.log(e);
         }

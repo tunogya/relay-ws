@@ -10,7 +10,7 @@ import { v4 as uuidv4 } from "uuid";
 import { embedding } from "../utils/embedding";
 
 /**
- * discuss
+ * assistant
  * only listen kind = 1 and 1063
  */
 export const handler: Handler = async (event: SQSEvent, context) => {
