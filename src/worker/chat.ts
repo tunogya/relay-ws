@@ -1,7 +1,5 @@
 import { Handler, SQSEvent, SQSRecord } from "aws-lambda";
 import { connectToDatabase } from "../utils/astradb";
-// @ts-ignore
-import { verifyEvent } from "nostr-tools/pure";
 
 /**
  * chat
@@ -15,15 +13,7 @@ export const handler: Handler = async (event: SQSEvent, context) => {
   const processRecord = async (record: SQSRecord) => {
     try {
       const _event = JSON.parse(record.body);
-      const index = Number(record.messageAttributes["index"].stringValue || 0);
-      const isValid = verifyEvent(_event);
-
-      const pList = _event.tags.filter((i: any) => i[0] === "p");
-      const aiPubkey = pList[index][1];
-
-      if (!isValid) {
-        return;
-      }
+      const asstPubkey = _event.tags.filter((i: any) => i[0] === "p")?.[0]?.[1];
 
       if (_event.kind !== 14) {
         return;
