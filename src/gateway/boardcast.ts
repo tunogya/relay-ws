@@ -4,8 +4,9 @@ import apiGatewayClient from "../utils/apiGatewayClient";
 import { PostToConnectionCommand } from "@aws-sdk/client-apigatewaymanagementapi";
 
 /**
- * boardcast
- * listen all events
+ * boardcast gateway
+ * listen all valid and invalid events
+ * handle all valid and invalid events
  */
 export const handler: Handler = async (event: SNSEvent, context) => {
   const records = event.Records;

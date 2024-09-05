@@ -39,8 +39,8 @@ functions:
     events:
       - sns:
           arn: ${env:NOSTR_EVENTS_SNS_ARN}
-  gateway_ai:
-    handler: src/gateway/ai.handler
+  gateway_chat:
+    handler: src/gateway/chat.handler
     timeout: 30
     memorySize: 256
     architecture: arm64
@@ -51,8 +51,7 @@ functions:
           filterPolicyScope: MessageAttributes
           filterPolicy:
             kind:
-              - 1
-              - 1063
+              - 14
   gateway_boardcast:
     handler: src/gateway/boardcast.handler
     timeout: 30
@@ -82,15 +81,15 @@ functions:
       - sqs:
           arn: arn:aws:sqs:ap-northeast-1:913870644571:embeddings.fifo
           batchSize: 1
-  worker_assistant:
-    handler: src/worker/assistant.handler
+  worker_chat:
+    handler: src/worker/chat.handler
     timeout: 30
     memorySize: 256
     architecture: arm64
     maximumRetryAttempts: 1
     events:
       - sqs:
-          arn: arn:aws:sqs:ap-northeast-1:913870644571:assistant.fifo
+          arn: arn:aws:sqs:ap-northeast-1:913870644571:chat.fifo
           batchSize: 1
   router_event:
     handler: src/router/EVENT.handler

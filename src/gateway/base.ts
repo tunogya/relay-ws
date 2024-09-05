@@ -5,8 +5,9 @@ import sqsClient from "../utils/sqsClient";
 import { SendMessageCommand } from "@aws-sdk/client-sqs";
 
 /**
- * AI gateway
- * listen all events
+ * base gateway
+ * listen all valid events
+ * handle all valid events
  */
 export const handler: Handler = async (event: SNSEvent, context) => {
   const records = event.Records;
@@ -21,6 +22,7 @@ export const handler: Handler = async (event: SNSEvent, context) => {
         return;
       }
 
+      // $persistence
       try {
         await sqsClient.send(
           new SendMessageCommand({
@@ -31,7 +33,23 @@ export const handler: Handler = async (event: SNSEvent, context) => {
             MessageGroupId: _event.pubkey,
           }),
         );
-        console.log("Send event to SQS");
+        console.log("Send event to SQS: persistence.fifo");
+      } catch (e) {
+        console.log(e);
+      }
+
+      // $embeddings
+      try {
+        await sqsClient.send(
+          new SendMessageCommand({
+            MessageBody: JSON.stringify(_event),
+            QueueUrl:
+              "https://sqs.ap-northeast-1.amazonaws.com/913870644571/embeddings.fifo",
+            MessageDeduplicationId: _event.id,
+            MessageGroupId: _event.pubkey,
+          }),
+        );
+        console.log("Send event to SQS: embeddings.fifo");
       } catch (e) {
         console.log(e);
       }

@@ -1,12 +1,11 @@
 import { Handler, SQSEvent, SQSRecord } from "aws-lambda";
 import { connectToDatabase } from "../utils/astradb";
-import openai from "../utils/openai";
 // @ts-ignore
 import { verifyEvent } from "nostr-tools/pure";
 
 /**
- * embeddings
- * only handle kind = 1, 1063
+ * chat
+ * only handle kind 14
  */
 export const handler: Handler = async (event: SQSEvent, context) => {
   const records = event.Records;
@@ -16,38 +15,21 @@ export const handler: Handler = async (event: SQSEvent, context) => {
   const processRecord = async (record: SQSRecord) => {
     try {
       const _event = JSON.parse(record.body);
+      const index = Number(record.messageAttributes["index"].stringValue || 0);
       const isValid = verifyEvent(_event);
+
+      const pList = _event.tags.filter((i: any) => i[0] === "p");
+      const aiPubkey = pList[index][1];
 
       if (!isValid) {
         return;
       }
 
-      if (_event.kind !== 1 && _event.kind !== 1063) {
+      if (_event.kind !== 14) {
         return;
       }
-
-      if (!_event.content) {
-        return;
-      }
-
-      // check if already has vector
-      const event = await db.collection("events").findOne({ id: _event.id });
-
-      if (event && event.$vector) {
-        return;
-      }
-
-      const response = await openai.embeddings.create({
-        input: _event.content,
-        model: "text-embedding-3-small",
-      });
-
-      const $vector = response.data[0].embedding;
-
-      await db
-        .collection("events")
-        .updateOne({ id: _event.id }, { $set: { $vector } }, { upsert: true });
-    } catch (_) {
+    } catch (e) {
+      console.log(e);
       throw new Error("Intentional failure to trigger DLQ");
     }
   };
