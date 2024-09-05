@@ -30,6 +30,17 @@ export const handler: Handler = async (event: SQSEvent, context) => {
         return;
       }
 
+      // check if already has vector
+      const event = await db.collection("events").findOne({ id: _event.id });
+
+      if (event && event.$vector) {
+        return {
+          statusCode: 200,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ success: true }),
+        };
+      }
+
       const response = await openai.embeddings.create({
         input: _event.content,
         model: "text-embedding-3-small",
