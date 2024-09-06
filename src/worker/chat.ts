@@ -1,7 +1,7 @@
 import { Handler, SQSEvent, SQSRecord } from "aws-lambda";
-import { connectToDatabase } from "../utils/astradb";
 import openai from "../utils/openai";
 import redisClient from "../utils/redisClient";
+import { executeFunction } from "../utils/executeFunction";
 
 /**
  * chat
@@ -9,8 +9,6 @@ import redisClient from "../utils/redisClient";
  */
 export const handler: Handler = async (event: SQSEvent, context) => {
   const records = event.Records;
-
-  const { db } = await connectToDatabase();
 
   const processRecord = async (record: SQSRecord) => {
     try {
@@ -46,26 +44,32 @@ export const handler: Handler = async (event: SQSEvent, context) => {
           .stream(thread_id, {
             assistant_id: assistant_id,
           })
-          .on("textCreated", (text) => process.stdout.write("\nassistant > "))
-          .on("textDelta", (textDelta, snapshot) =>
-            process.stdout.write(textDelta.value),
-          )
-          .on("toolCallCreated", (toolCall) =>
-            process.stdout.write(`\nassistant > ${toolCall.type}\n\n`),
-          )
-          .on("toolCallDelta", (toolCallDelta, snapshot) => {
-            if (toolCallDelta.type === "code_interpreter") {
-              if (toolCallDelta.code_interpreter?.input) {
-                process.stdout.write(toolCallDelta.code_interpreter.input);
-              }
-              if (toolCallDelta.code_interpreter?.outputs) {
-                process.stdout.write("\noutput >\n");
-                toolCallDelta.code_interpreter.outputs.forEach((output) => {
-                  if (output.type === "logs") {
-                    process.stdout.write(`\n${output.logs}\n`);
-                  }
-                });
-              }
+          .on("event", async (event) => {
+            if (event.event === "thread.run.completed") {
+            }
+            if (event.event === "thread.run.requires_action") {
+              const requiredActions =
+                event.data.required_action?.submit_tool_outputs.tool_calls ||
+                [];
+              const functionCalls = await Promise.all(
+                requiredActions.map(async (action) => {
+                  return await executeFunction(
+                    action.id,
+                    action.function.name,
+                    action.function.arguments,
+                  );
+                }),
+              );
+              openai.beta.threads.runs.submitToolOutputsStream(
+                thread_id,
+                event.data.id,
+                {
+                  tool_outputs: functionCalls.map((call) => ({
+                    tool_call_id: call?.callId,
+                    output: call?.results,
+                  })),
+                },
+              );
             }
           });
       } catch (e) {
