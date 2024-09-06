@@ -55,3 +55,27 @@ export const searchPostsHandler = async (params: string) => {
     };
   }
 };
+
+const searchPosts = {
+  type: "function",
+  function: {
+    name: "searchPosts",
+    description:
+      "If you want to know more about someone, just query something.",
+    parameters: {
+      type: "object",
+      properties: {
+        pubkey: {
+          type: "string",
+          description: "Public key of user.",
+        },
+        query: {
+          type: "string",
+          description: "Query string",
+        },
+      },
+      required: ["pubkey", "query"],
+      additionalProperties: false,
+    },
+  },
+};

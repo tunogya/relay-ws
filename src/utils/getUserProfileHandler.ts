@@ -28,3 +28,23 @@ export const getUserProfileHandler = async (params: string) => {
     };
   }
 };
+
+const getUserProfile = {
+  type: "function",
+  function: {
+    name: "getUserProfile",
+    description:
+      "Get user's metadata. For example, user's name, about, picture, etc.",
+    parameters: {
+      type: "object",
+      properties: {
+        pubkey: {
+          type: "string",
+          description: "Public key of user.",
+        },
+      },
+      required: ["pubkey"],
+      additionalProperties: false,
+    },
+  },
+};
