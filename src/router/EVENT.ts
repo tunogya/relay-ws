@@ -57,7 +57,7 @@ export const handler: Handler = async (event: APIGatewayEvent, context) => {
           "OK",
           id,
           false,
-          `duplicate: this event already exisest.`,
+          `duplicate: this event already exist.`,
         ]),
       };
     }
