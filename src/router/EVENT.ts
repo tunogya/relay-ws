@@ -19,9 +19,34 @@ export const handler: Handler = async (event: APIGatewayEvent, context) => {
     // @ts-ignore
     event.body,
   );
+  // handle chat message
   // @ts-ignore
   const { id, kind, pubkey, created_at, content, tags, sig } = messageArray[1];
   try {
+    if (kind === 14) {
+      await snsClient.send(
+        new PublishCommand({
+          TopicArn: process.env.NOSTR_EVENTS_SNS_ARN,
+          Message: JSON.stringify({
+            id,
+            kind,
+            pubkey,
+            created_at,
+            content,
+            tags,
+            sig,
+          }),
+          MessageAttributes: {
+            kind: {
+              DataType: "Number",
+              StringValue: kind.toString(),
+            },
+          },
+        }),
+      );
+      return;
+    }
+
     // check invalid
     const isValid = verifyEvent({
       id,

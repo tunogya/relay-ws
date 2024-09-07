@@ -24,7 +24,7 @@ export const handler: Handler = async (event: SNSEvent, context) => {
               MessageGroupId: _event.pubkey,
             }),
           );
-          console.log("Send event to SQS: assistant.fifo");
+          console.log("Send event to SQS: chat.fifo");
         } catch (e) {
           console.log(e);
         }
