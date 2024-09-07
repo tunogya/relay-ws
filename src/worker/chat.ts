@@ -1,10 +1,6 @@
 import { Handler, SQSEvent, SQSRecord } from "aws-lambda";
 import openai from "../utils/openai";
 import redisClient from "../utils/redisClient";
-import { executeFunction } from "../utils/executeFunction";
-import { v4 as uuidv4 } from "uuid";
-import snsClient from "../utils/snsClient";
-import { PublishCommand } from "@aws-sdk/client-sns";
 
 /**
  * chat
@@ -43,67 +39,11 @@ export const handler: Handler = async (event: SQSEvent, context) => {
       });
 
       try {
-        const stream = openai.beta.threads.runs.stream(thread_id, {
+        const run = await openai.beta.threads.runs.create(thread_id, {
           assistant_id: assistant_id,
         });
-        await (async () => {
-          stream
-            .on("event", async (event) => {
-              if (event.event === "thread.run.requires_action") {
-                const requiredActions =
-                  event.data.required_action?.submit_tool_outputs.tool_calls ||
-                  [];
-                const functionCalls = await Promise.all(
-                  requiredActions.map(async (action) => {
-                    return await executeFunction(
-                      action.id,
-                      action.function.name,
-                      action.function.arguments,
-                    );
-                  }),
-                );
-                console.log(functionCalls);
-                openai.beta.threads.runs.submitToolOutputsStream(
-                  thread_id,
-                  event.data.id,
-                  {
-                    tool_outputs: functionCalls.map((call) => ({
-                      tool_call_id: call?.callId,
-                      output: call?.results,
-                    })),
-                  },
-                );
-              }
-            })
-            .on("textCreated", async (text) => {
-              const event = {
-                id: uuidv4(),
-                content: text.value,
-                pubkey: asstPubkey,
-                created_at: Math.floor(Date.now() / 1000),
-                kind: 14,
-                tags: [
-                  ["p", _event.pubkey],
-                  ["role", "assistant"],
-                ],
-                sig: _event.sig,
-              };
-              console.log(JSON.stringify(event));
-              await snsClient.send(
-                new PublishCommand({
-                  TopicArn: process.env.NOSTR_EVENTS_SNS_ARN,
-                  Message: JSON.stringify(event),
-                  MessageAttributes: {
-                    kind: {
-                      DataType: "Number",
-                      StringValue: "14",
-                    },
-                  },
-                }),
-              );
-              console.log("Send chat message.");
-            });
-        })();
+        console.log(run);
+        // TODO: query run
       } catch (e) {
         console.log("something went wrong on threads run", e);
       }
