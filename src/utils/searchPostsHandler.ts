@@ -28,12 +28,7 @@ export const searchPostsHandler = async (params: string) => {
     const similarPosts = await db
       .collection("events")
       .find(
-        {
-          $or: [
-            { kind: 1, pubkey: pubkey },
-            { kind: 1063, pubkey: pubkey },
-          ],
-        },
+        { pubkey: pubkey },
         {
           vector: await embedding(query),
           limit: 10,
