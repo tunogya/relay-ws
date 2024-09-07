@@ -2,6 +2,9 @@ import { Handler, SQSEvent, SQSRecord } from "aws-lambda";
 import openai from "../utils/openai";
 import redisClient from "../utils/redisClient";
 import { executeFunction } from "../utils/executeFunction";
+import { v4 as uuidv4 } from "uuid";
+import snsClient from "../utils/snsClient";
+import { PublishCommand } from "@aws-sdk/client-sns";
 
 /**
  * chat
@@ -34,19 +37,17 @@ export const handler: Handler = async (event: SQSEvent, context) => {
       }
 
       // attach current message to thread
-      const message = await openai.beta.threads.messages.create(thread_id, {
+      await openai.beta.threads.messages.create(thread_id, {
         role: "user",
         content: JSON.stringify(_event),
       });
 
       try {
-        const run = openai.beta.threads.runs
+        openai.beta.threads.runs
           .stream(thread_id, {
             assistant_id: assistant_id,
           })
           .on("event", async (event) => {
-            if (event.event === "thread.run.completed") {
-            }
             if (event.event === "thread.run.requires_action") {
               const requiredActions =
                 event.data.required_action?.submit_tool_outputs.tool_calls ||
@@ -71,6 +72,32 @@ export const handler: Handler = async (event: SQSEvent, context) => {
                 },
               );
             }
+          })
+          .on("textCreated", async (text) => {
+            const event = {
+              id: uuidv4(),
+              content: text.value,
+              pubkey: asstPubkey,
+              created_at: Math.floor(Date.now() / 1000),
+              kind: 14,
+              tags: [
+                ["p", _event.pubkey],
+                ["role", "assistant"],
+              ],
+              sig: _event.sig,
+            };
+            await snsClient.send(
+              new PublishCommand({
+                TopicArn: process.env.NOSTR_EVENTS_SNS_ARN,
+                Message: JSON.stringify(event),
+                MessageAttributes: {
+                  kind: {
+                    DataType: "Number",
+                    StringValue: "14",
+                  },
+                },
+              }),
+            );
           });
       } catch (e) {
         console.log("something went wrong on threads run", e);

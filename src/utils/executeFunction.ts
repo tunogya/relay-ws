@@ -1,6 +1,5 @@
 import { getUserProfileHandler } from "./getUserProfileHandler";
 import { searchPostsHandler } from "./searchPostsHandler";
-import { sendMessageHandler } from "./sendMessageHandler";
 
 export const executeFunction = async (
   callId: string,
@@ -26,7 +25,6 @@ export const executeFunction = async (
 const assistantFunctions: {
   [key: string]: (params: string) => Promise<any>;
 } = {
-  sendMessage: sendMessageHandler,
   searchPosts: searchPostsHandler,
   getUserProfile: getUserProfileHandler,
 };
