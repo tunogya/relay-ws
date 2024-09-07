@@ -7,7 +7,8 @@ export const executeFunction = async (
   params: string,
 ) => {
   if (assistantFunctions?.[functionName] !== undefined) {
-    const result = assistantFunctions[functionName](params);
+    const func = assistantFunctions[functionName];
+    const result = await func(params);
     return {
       callId,
       results: JSON.stringify(result),

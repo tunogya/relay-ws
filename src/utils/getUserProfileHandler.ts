@@ -1,6 +1,7 @@
 import { connectToDatabase } from "./astradb";
 
 export const getUserProfileHandler = async (params: string) => {
+  console.log("params:", params);
   try {
     const { pubkey } = JSON.parse(params);
     if (!pubkey) {

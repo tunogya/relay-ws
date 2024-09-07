@@ -61,6 +61,7 @@ export const handler: Handler = async (event: SQSEvent, context) => {
                   );
                 }),
               );
+              console.log(functionCalls);
               openai.beta.threads.runs.submitToolOutputsStream(
                 thread_id,
                 event.data.id,
@@ -86,6 +87,7 @@ export const handler: Handler = async (event: SQSEvent, context) => {
               ],
               sig: _event.sig,
             };
+            console.log(JSON.stringify(event));
             await snsClient.send(
               new PublishCommand({
                 TopicArn: process.env.NOSTR_EVENTS_SNS_ARN,
@@ -98,6 +100,7 @@ export const handler: Handler = async (event: SQSEvent, context) => {
                 },
               }),
             );
+            console.log("Send chat message.");
           });
       } catch (e) {
         console.log("something went wrong on threads run", e);
