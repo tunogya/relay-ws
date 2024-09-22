@@ -44,7 +44,11 @@ export const handler: Handler = async (event: APIGatewayEvent, context) => {
           },
         }),
       );
-      return;
+      return {
+        statusCode: 200,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(["OK", id, true, "Event received successfully."]),
+      };
     }
 
     // check invalid
