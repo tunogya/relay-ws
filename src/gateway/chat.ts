@@ -4,11 +4,10 @@ import { SendMessageCommand } from "@aws-sdk/client-sqs";
 
 /**
  * chat gateway
+ * filter kind = 14 and role = user
  */
 export const handler: Handler = async (event: SNSEvent, context) => {
   const records = event.Records;
-
-  console.log("records:", JSON.stringify(records));
   const processRecord = async (record: SNSEventRecord) => {
     try {
       const _event = JSON.parse(record.Sns.Message);

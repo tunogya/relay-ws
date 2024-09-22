@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from "uuid";
 
 /**
  * chat
- * only handle kind 14
+ * only handle kind 14, and role = user
  */
 export const handler: Handler = async (event: SQSEvent, context) => {
   const records = event.Records;
@@ -21,6 +21,7 @@ export const handler: Handler = async (event: SQSEvent, context) => {
       }
 
       // boardcast a message to client
+      // don't handle this message
       await snsClient.send(
         new PublishCommand({
           TopicArn: process.env.NOSTR_EVENTS_SNS_ARN,
@@ -40,6 +41,10 @@ export const handler: Handler = async (event: SQSEvent, context) => {
             kind: {
               DataType: "Number",
               StringValue: "14",
+            },
+            role: {
+              DataType: "String",
+              StringValue: "assistant",
             },
           },
         }),
