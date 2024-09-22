@@ -17,9 +17,6 @@ export const handler: Handler = async (event: SNSEvent, context) => {
       for (const tag of _event.tags) {
         if (tag?.[0] === "p") {
           const pubkey = tag?.[1];
-          if (pubkey === _event.pubkey) {
-            continue;
-          }
           const connectionId = await redisClient.get(`pubkey2conn:${pubkey}`);
           if (connectionId) {
             try {
