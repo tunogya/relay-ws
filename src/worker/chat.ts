@@ -1,6 +1,9 @@
 import { Handler, SQSEvent, SQSRecord } from "aws-lambda";
 import openai from "../utils/openai";
+import snsClient from "../utils/snsClient";
 import redisClient from "../utils/redisClient";
+import { PublishCommand } from "@aws-sdk/client-sns";
+import { v4 as uuidv4 } from "uuid";
 
 /**
  * chat
@@ -12,41 +15,35 @@ export const handler: Handler = async (event: SQSEvent, context) => {
   const processRecord = async (record: SQSRecord) => {
     try {
       const _event = JSON.parse(record.body);
-      const asstPubkey = _event.tags.filter((i: any) => i[0] === "p")?.[0]?.[1];
 
       if (_event.kind !== 14) {
         return;
       }
 
-      const assistant_id = "asst_J2Wr8FyeghaDrph8EAbpPvol";
-
-      // find thread_id from cache, if not exist, create one
-      // event.sig is room id, which is pubkey+pubkey
-      let thread_id = (await redisClient.get(`room2thread:${_event.sig}`)) as
-        | string
-        | null;
-      if (!thread_id) {
-        const thread = await openai.beta.threads.create();
-        thread_id = thread.id;
-        // cache to redis
-        await redisClient.set(`room2thread:${_event.sig}`, thread_id);
-      }
-
-      // attach current message to thread
-      await openai.beta.threads.messages.create(thread_id, {
-        role: "user",
-        content: JSON.stringify(_event),
-      });
-
-      try {
-        const run = await openai.beta.threads.runs.create(thread_id, {
-          assistant_id: assistant_id,
-        });
-        console.log(run);
-        // TODO: query run
-      } catch (e) {
-        console.log("something went wrong on threads run", e);
-      }
+      // boardcast a message to client
+      await snsClient.send(
+        new PublishCommand({
+          TopicArn: process.env.NOSTR_EVENTS_SNS_ARN,
+          Message: JSON.stringify({
+            id: uuidv4(),
+            kind: 14,
+            pubkey: _event.sig.replace(_event.pubkey, ""),
+            created_at: Math.floor(Date.now() / 1000),
+            content: "收到消息",
+            tags: [
+              ["p", _event.pubkey],
+              ["role", "assistant"],
+            ],
+            sig: _event.sig,
+          }),
+          MessageAttributes: {
+            kind: {
+              DataType: "Number",
+              StringValue: "14",
+            },
+          },
+        }),
+      );
     } catch (e) {
       console.log(e);
       throw new Error("Intentional failure to trigger DLQ");
