@@ -23,45 +23,27 @@ export const handler: Handler = async (event: APIGatewayEvent, context) => {
   // @ts-ignore
   const { id, kind, pubkey, created_at, content, tags, sig } = messageArray[1];
   try {
-    if (kind === 14) {
-      await snsClient.send(
-        new PublishCommand({
-          TopicArn: process.env.NOSTR_EVENTS_SNS_ARN,
-          Message: JSON.stringify({
-            id,
-            kind,
-            pubkey,
-            created_at,
-            content,
-            tags,
-            sig,
-          }),
-          MessageAttributes: {
-            kind: {
-              DataType: "Number",
-              StringValue: kind.toString(),
-            },
-          },
-        }),
-      );
-      return {
-        statusCode: 200,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(["OK", id, true, "Event received successfully."]),
-      };
+    console.log("Check event valid...");
+    let isValid;
+    try {
+      // check invalid
+      isValid = verifyEvent({
+        id,
+        kind,
+        pubkey,
+        created_at,
+        content,
+        tags,
+        sig,
+      });
+    } catch (e) {
+      isValid = false;
     }
-
-    // check invalid
-    const isValid = verifyEvent({
-      id,
-      kind,
-      pubkey,
-      created_at,
-      content,
-      tags,
-      sig,
-    });
+    if (kind === 14) {
+      isValid = true;
+    }
     if (!isValid) {
+      console.log("The event is invalid!");
       return {
         statusCode: 200,
         headers: { "Content-Type": "application/json" },
@@ -73,12 +55,13 @@ export const handler: Handler = async (event: APIGatewayEvent, context) => {
         ]),
       };
     }
-
+    console.log("The event is valid!");
     const { db } = await connectToDatabase();
     const event = await db.collection("events").findOne({
       id: id,
     });
     if (event) {
+      console.log("duplicate: this event already exist.");
       return {
         statusCode: 200,
         headers: { "Content-Type": "application/json" },
@@ -119,12 +102,14 @@ export const handler: Handler = async (event: APIGatewayEvent, context) => {
     );
 
     if (result.MessageId) {
+      console.log("Event received successfully.");
       return {
         statusCode: 200,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(["OK", id, true, `Event received successfully.`]),
       };
     } else {
+      console.log("error: SNS send error.");
       return {
         statusCode: 200,
         headers: { "Content-Type": "application/json" },
