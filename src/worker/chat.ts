@@ -29,6 +29,18 @@ export const handler: Handler = async (event: SQSEvent, context) => {
         pubkey: pubkey,
       });
 
+      // tags: [["history", "chat1", "chat2", ...]]
+
+      let historyChatContent = "";
+
+      // get history chat from _event.tags
+      const historyChat = _event.tags.find((tag: any) => tag[0] === "history");
+      if (historyChat) {
+        historyChatContent = historyChat.slice(1).join("/n");
+      }
+
+      const content_with_history = `${historyChatContent}\n\n${_event.content}`;
+
       // get memory of user
       const similarPosts = await db
         .collection("events")
@@ -37,7 +49,7 @@ export const handler: Handler = async (event: SQSEvent, context) => {
             pubkey: pubkey,
           },
           {
-            vector: await embedding(_event.content),
+            vector: await embedding(content_with_history),
             limit: 10,
             projection: {
               $vector: 0,
@@ -51,17 +63,25 @@ export const handler: Handler = async (event: SQSEvent, context) => {
         messages: [
           {
             role: "system",
-            content: `This is your BIO: ${userInfo?.content || "NULL"}`,
+            content: `You are an AI assistant embodying a specific persona. Use the following information to shape your responses:
+
+1. Personal Biography:
+${userInfo?.content || "No specific biography available."}
+
+2. Conversation History:
+${historyChatContent || "No specific conversation history available."}
+
+3. Worldview and Values:
+${
+  similarPosts.map((event) => event.content).join(", ") ||
+  "No specific worldview or values available."
+}
+
+Based on this information, respond to the user's message in a way that reflects this persona's unique personality, knowledge, and perspective. Maintain consistency with the provided background and previous interactions.`,
           },
           {
             role: "user",
             content: _event.content,
-          },
-          {
-            role: "system",
-            content: `This is your worldview and values: ${
-              similarPosts.map((event) => event.content).join(", ") ?? "NULL"
-            }. Please summarize and reply to the user.`,
           },
         ],
       });
