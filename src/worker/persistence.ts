@@ -82,7 +82,8 @@ export const handler: Handler = async (event: SQSEvent, context) => {
           }
         }
       }
-    } catch (_) {
+    } catch (e) {
+      console.log(e);
       throw new Error("Intentional failure to trigger DLQ");
     }
   };
