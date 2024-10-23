@@ -1,5 +1,6 @@
+# "org" ensures this Service is used with the correct Serverless Framework Access Key.
+org: tunogya
 service: relay-ws
-frameworkVersion: "4"
 
 package:
   patterns:

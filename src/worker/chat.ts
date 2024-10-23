@@ -119,8 +119,8 @@ Based on this information, respond to the user's message in a way that reflects 
         );
       }
     } catch (e) {
+      console.log("Intentional failure to trigger DLQ");
       console.log(e);
-      throw new Error("Intentional failure to trigger DLQ");
     }
   };
 

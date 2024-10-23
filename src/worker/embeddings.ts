@@ -34,8 +34,9 @@ export const handler: Handler = async (event: SQSEvent, context) => {
       await db
         .collection("events")
         .updateOne({ id: _event.id }, { $set: { $vector } }, { upsert: true });
-    } catch (_) {
-      throw new Error("Intentional failure to trigger DLQ");
+    } catch (e) {
+      console.log("Intentional failure to trigger DLQ");
+      console.log(e);
     }
   };
 
