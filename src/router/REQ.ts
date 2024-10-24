@@ -37,18 +37,7 @@ export const handler: Handler = async (event: APIGatewayEvent, context) => {
   const { db } = await connectToDatabase();
 
   const handleFiltersX = async (filter: Filter) => {
-    // Validate if filter is not of type Filter, then return
-    if (!filter || typeof filter !== "object") {
-      console.warn("Invalid filter provided");
-      return;
-    }
-
     const { ids, authors, kinds, limit, since, until } = filter;
-
-    if (authors?.length === 0 && ids?.length === 0) {
-      console.log("Unsafe request");
-      return;
-    }
 
     const query: Record<string, any> = {};
 
@@ -127,8 +116,10 @@ export const handler: Handler = async (event: APIGatewayEvent, context) => {
     }
   };
 
-  for (let i = 0; i < filters.length; i++) {
-    const filter = filters[i];
+  for (const filter of filters) {
+    if (!filter.ids?.length && !filter.authors?.length) {
+      continue; // 跳过
+    }
     await handleFiltersX(filter);
   }
 
