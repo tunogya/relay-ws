@@ -37,66 +37,93 @@ export const handler: Handler = async (event: APIGatewayEvent, context) => {
   const { db } = await connectToDatabase();
 
   const handleFiltersX = async (filter: Filter) => {
-    const { ids, authors, kinds, limit, search, since, until } = filter;
+    // Validate if filter is not of type Filter, then return
+    if (!filter || typeof filter !== "object") {
+      console.warn("Invalid filter provided");
+      return;
+    }
+
+    const { ids, authors, kinds, limit, since, until } = filter;
+
+    if (authors?.length === 0 && ids?.length === 0) {
+      console.log("Unsafe request");
+      return;
+    }
+
     const query: Record<string, any> = {};
-    if (ids && ids.length > 0) {
+
+    if (Array.isArray(ids) && ids.every((id) => typeof id === "string")) {
       query.id = { $in: ids };
     }
-    if (authors && authors.length > 0) {
+    if (
+      Array.isArray(authors) &&
+      authors.every((author) => typeof author === "string")
+    ) {
       query.pubkey = { $in: authors };
     }
-    if (kinds && kinds.length > 0) {
+    if (
+      Array.isArray(kinds) &&
+      kinds.every((kind) => typeof kind === "number")
+    ) {
       query.kind = { $in: kinds };
     }
-    if (since) {
+    if (typeof since === "number") {
       query.created_at = { $gte: since };
     }
-    if (until) {
+    if (typeof until === "number") {
       query.created_at = {
         ...query.created_at,
         $lte: until,
       };
     }
-    const cursor = db
-      .collection("events")
-      .find(query)
-      .limit(limit || 20);
-    while (await cursor.hasNext()) {
-      const doc = await cursor.next();
-      if (doc) {
-        const { id, pubkey, kind, created_at, content, tags, sig } = doc;
-        const isValid = verifyEvent({
-          id,
-          pubkey,
-          kind,
-          created_at,
-          content,
-          tags,
-          sig,
-        });
-        if (isValid) {
-          await apiGatewayClient
-            .send(
-              new PostToConnectionCommand({
-                ConnectionId: connectionId,
-                Data: JSON.stringify([
-                  "EVENT",
-                  subscription_id,
-                  {
-                    id: doc.id,
-                    pubkey: doc.pubkey,
-                    created_at: doc.created_at,
-                    kind: doc.kind,
-                    content: doc.content,
-                    tags: doc.tags,
-                    sig: doc.sig,
-                  },
-                ]),
-              }),
-            )
-            .catch((e) => console.log(e));
+
+    try {
+      const cursor = db
+        .collection("events")
+        .find(query)
+        .limit(typeof limit === "number" ? limit : 20);
+
+      while (await cursor.hasNext()) {
+        const doc = await cursor.next();
+        if (doc) {
+          const { id, pubkey, kind, created_at, content, tags, sig } = doc;
+          const isValid = verifyEvent({
+            id,
+            pubkey,
+            kind,
+            created_at,
+            content,
+            tags,
+            sig,
+          });
+          if (isValid) {
+            try {
+              await apiGatewayClient.send(
+                new PostToConnectionCommand({
+                  ConnectionId: connectionId,
+                  Data: JSON.stringify([
+                    "EVENT",
+                    subscription_id,
+                    {
+                      id: doc.id,
+                      pubkey: doc.pubkey,
+                      created_at: doc.created_at,
+                      kind: doc.kind,
+                      content: doc.content,
+                      tags: doc.tags,
+                      sig: doc.sig,
+                    },
+                  ]),
+                }),
+              );
+            } catch (e) {
+              console.error("Error sending event to connection:", e);
+            }
+          }
         }
       }
+    } catch (e) {
+      console.error("Error querying database:", e);
     }
   };
 
