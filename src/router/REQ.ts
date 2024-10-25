@@ -70,6 +70,9 @@ export const handler: Handler = async (event: APIGatewayEvent, context) => {
       const cursor = db
         .collection("events")
         .find(query)
+        .sort({
+          created_at: 1,
+        })
         .limit(typeof limit === "number" ? limit : 20);
 
       while (await cursor.hasNext()) {
