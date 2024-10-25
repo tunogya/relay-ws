@@ -66,6 +66,10 @@ export const handler: Handler = async (event: APIGatewayEvent, context) => {
       };
     }
 
+    query.sort = {
+      created_at: 1,
+    };
+
     try {
       const cursor = db
         .collection("events")
